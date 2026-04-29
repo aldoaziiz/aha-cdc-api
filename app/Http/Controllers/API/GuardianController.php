@@ -18,9 +18,15 @@ class GuardianController extends Controller
                 'name' => $g->name,
                 'phone' => $g->phone,
                 'address' => $g->address,
-                'status_name' => $g->status->name ?? '',
-                'status_code' => $g->status->code ?? null,
-                'role_name' => $g->role->name ?? '',
+                'status' => [
+                    'status_id' => $g->status_id,
+                    'code' => $g->status->code ?? null,
+                    'name' => $g->status->name ?? '',
+                ],
+                'role' => [
+                    'role_id' => $g->role_id,
+                    'name' => $g->role->name ?? '',
+                ],
                 'children_names' => $g->children->pluck('name')->toArray(),
             ];
         });

@@ -23,9 +23,15 @@ class StaffController extends Controller
                 'email' => $s->email,
                 'phone' => $s->phone,
                 'address' => $s->address,
-                'role_name' => $s->role->name ?? '',
-                'status_name' => $s->status->name ?? '',
-                'status_code' => $s->status->code ?? null,
+                'status' => [
+                    'status_id' => $s->status_id,
+                    'code' => $s->status->code ?? null,
+                    'name' => $s->status->name ?? '',
+                ],
+                'role' => [
+                    'role_id' => $s->role_id,
+                    'name' => $s->role->name ?? '',
+                ],
             ];
         });
     }
@@ -35,9 +41,9 @@ class StaffController extends Controller
      */
     public function store(Request $request)
     {
-        $guardian = Staff::with(['status', 'role'])
+        $staff = Staff::with(['status', 'role'])
             ->create($request->all());
-        return response()->json($guardian, 201);
+        return response()->json($staff, 201);
     }
 
     /**
@@ -45,14 +51,14 @@ class StaffController extends Controller
      */
     public function show($id)
     {
-        $guardian = Staff::with(['status', 'role'])
+        $staff = Staff::with(['status', 'role'])
             ->find($id);
 
-        if (!$guardian) {
+        if (!$staff) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        return response()->json($guardian);
+        return response()->json($staff);
     }
 
     /**
@@ -60,16 +66,16 @@ class StaffController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $guardian = Staff::with(['status', 'role'])
+        $staff = Staff::with(['status', 'role'])
             ->find($id);
 
-        if (!$guardian) {
+        if (!$staff) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $guardian->update($request->all());
+        $staff->update($request->all());
 
-        return response()->json($guardian);
+        return response()->json($staff);
     }
 
     /**
@@ -77,14 +83,14 @@ class StaffController extends Controller
      */
     public function destroy($id)
     {
-        $guardian = Staff::with(['status', 'role'])
+        $staff = Staff::with(['status', 'role'])
             ->find($id);
 
-        if (!$guardian) {
+        if (!$staff) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $guardian->delete($id);
+        $staff->delete($id);
 
         return response()->json(['message' => 'Deleted']);
     }

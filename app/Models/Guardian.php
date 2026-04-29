@@ -23,11 +23,11 @@ class Guardian extends Model
 
     public function status()
     {
-        return $this->belongsTo(Status::class);
+        return $this->belongsTo(Status::class, 'status_id');
     }
 
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class, 'role_id');
     }
 }

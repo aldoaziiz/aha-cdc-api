@@ -9,13 +9,13 @@ class Child extends Model
     protected $fillable = [
         'id_number',
         'name',
+        'nickname',
         'birth_date',
         'gender',
         'phone',
         'address',
         'program_id',
         'status_id',
-        'nickname',
         'birthplace_id',
         'hometown_id',
         'education_id',
@@ -26,17 +26,17 @@ class Child extends Model
 
     public function program()
     {
-        return $this->belongsTo(Program::class);
+        return $this->belongsTo(Program::class, 'program_id');
     }
 
     public function status()
     {
-        return $this->belongsTo(Status::class);
+        return $this->belongsTo(Status::class, 'status_id');
     }
 
     public function guardian()
     {
-        return $this->belongsTo(Guardian::class);
+        return $this->belongsTo(Guardian::class, 'guardian_id');
     }
 
     public function birthplace()
@@ -47,5 +47,10 @@ class Child extends Model
     public function hometown()
     {
         return $this->belongsTo(City::class, 'hometown_id');
+    }
+
+    public function schoolClass()
+    {
+        return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 }

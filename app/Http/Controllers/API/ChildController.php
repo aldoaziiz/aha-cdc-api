@@ -11,34 +11,44 @@ class ChildController extends Controller
     // GET all
     public function index()
     {
-        $children = Child::with([
-            'program:id,name',
-            'status:id,code,name',
-            'guardian:id,name',
-            'birthplace:id,name',
-            'hometown:id,name',
-        ])
-            ->get()
-            ->map(function ($child) {
-                return [
-                    'id' => $child->id,
-                    'id_number' => $child->id_number,
-                    'name' => $child->name,
-                    'birth_date' => $child->birth_date,
-                    'gender' => $child->gender,
-                    'guardian_name' => $child->guardian->name ?? '',
-                    'phone' => $child->phone,
-                    'address' => $child->address,
-                    'program_name' => $child->program->name ?? '',
-                    'status_code' => $child->status->code ?? null,
-                    'status_name' => $child->status->name ?? '',
-                    'created_at' => $child->created_at,
-                    'birthplace_name' => $child->birthplace->name ?? '',
-                    'hometown_name' => $child->hometown->name ?? '',
-                ];
-            });
+        $children = \App\Models\Child::with([
+            'guardian',
+            'program',
+            'status',
+            'birthplace',
+            'hometown',
+            'schoolClass'
+        ])->get();
 
-        return response()->json($children);
+        return $children->map(function ($c) {
+            return [
+                'id' => $c->id,
+                'id_number' => $c->id_number,
+                'name' => $c->name,
+                'birth_date' => $c->birth_date,
+                'gender' => $c->gender,
+                'phone' => $c->phone,
+                'address' => $c->address,
+                'created_at' => $c->created_at,
+
+                'guardian' => [
+                    'guardian_id' => $c->guardian_id,
+                    'name' => $c->guardian->name ?? '',
+                    'phone' => $c->guardian->phone ?? '',
+                ],
+
+                'program' => [
+                    'program_id' => $c->program_id,
+                    'name' => $c->program->name ?? '',
+                ],
+
+                'status' => [
+                    'status_id' => $c->status_id,
+                    'code' => $c->status->code ?? null,
+                    'name' => $c->status->name ?? '',
+                ],
+            ];
+        });
     }
 
     // POST create
