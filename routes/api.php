@@ -13,3 +13,4 @@ Route::apiResource('children', API\ChildController::class);
 // Route::post('/children/bulk', [ChildController::class, 'bulkStore']);
 Route::apiResource('guardians', API\GuardianController::class);
 Route::apiResource('staffs', API\StaffController::class);
+Route::apiResource('schools', API\SchoolController::class);

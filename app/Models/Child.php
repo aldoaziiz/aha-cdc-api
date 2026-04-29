@@ -16,27 +16,26 @@ class Child extends Model
         'address',
         'program_id',
         'status_id',
+        'guardian_id',
         'birthplace_id',
         'hometown_id',
-        'education_id',
         'school_id',
-        'class_id',
-        'guardian_id',
+        'school_class_id',
     ];
 
     public function program()
     {
-        return $this->belongsTo(Program::class, 'program_id');
+        return $this->belongsTo(Program::class);
     }
 
     public function status()
     {
-        return $this->belongsTo(Status::class, 'status_id');
+        return $this->belongsTo(Status::class);
     }
 
     public function guardian()
     {
-        return $this->belongsTo(Guardian::class, 'guardian_id');
+        return $this->belongsTo(Guardian::class);
     }
 
     public function birthplace()
@@ -51,6 +50,11 @@ class Child extends Model
 
     public function schoolClass()
     {
-        return $this->belongsTo(SchoolClass::class, 'class_id');
+        return $this->belongsTo(SchoolClass::class);
+    }
+
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 }

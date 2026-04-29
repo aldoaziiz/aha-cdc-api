@@ -24,12 +24,11 @@ class StaffController extends Controller
                 'phone' => $s->phone,
                 'address' => $s->address,
                 'status' => [
-                    'status_id' => $s->status_id,
-                    'code' => $s->status->code ?? null,
+                    'id' => $s->status_id,
                     'name' => $s->status->name ?? '',
                 ],
-                'role' => [
-                    'role_id' => $s->role_id,
+                'staff_role' => [
+                    'id' => $s->staff_role_id,
                     'name' => $s->role->name ?? '',
                 ],
             ];

@@ -8,28 +8,16 @@ use Illuminate\Http\Request;
 
 class GuardianController extends Controller
 {
+    // GET all
     public function index()
     {
-        $guardians = Guardian::with(['status', 'role'])->get();
+        $guardians = Guardian::with([
+            'status',
+            'role',
+            'children:id,guardian_id,name'
+        ])->get();
 
-        return $guardians->map(function ($g) {
-            return [
-                'id' => $g->id,
-                'name' => $g->name,
-                'phone' => $g->phone,
-                'address' => $g->address,
-                'status' => [
-                    'status_id' => $g->status_id,
-                    'code' => $g->status->code ?? null,
-                    'name' => $g->status->name ?? '',
-                ],
-                'role' => [
-                    'role_id' => $g->role_id,
-                    'name' => $g->role->name ?? '',
-                ],
-                'children_names' => $g->children->pluck('name')->toArray(),
-            ];
-        });
+        return $guardians;
     }
 
     // POST create

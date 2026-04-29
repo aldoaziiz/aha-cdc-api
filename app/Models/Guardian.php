@@ -13,7 +13,8 @@ class Guardian extends Model
         'id_number',
         'address',
         'phone',
-        'status_id'
+        'status_id',
+        'role_id',
     ];
 
     public function children()
@@ -23,11 +24,11 @@ class Guardian extends Model
 
     public function status()
     {
-        return $this->belongsTo(Status::class, 'status_id');
+        return $this->belongsTo(Status::class);
     }
 
     public function role()
     {
-        return $this->belongsTo(Role::class, 'role_id');
+        return $this->belongsTo(Role::class);
     }
 }

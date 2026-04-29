@@ -14,7 +14,7 @@ class Staff extends Model
         'email',
         'phone',
         'address',
-        'role_id',
+        'staff_role_id',
         'status_id'
     ];
 
