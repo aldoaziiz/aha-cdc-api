@@ -84,7 +84,7 @@ class StaffController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $guardian->delete();
+        $guardian->delete($id);
 
         return response()->json(['message' => 'Deleted']);
     }

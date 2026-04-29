@@ -14,7 +14,9 @@ class ChildController extends Controller
         $children = Child::with([
             'program:id,name',
             'status:id,code,name',
-            'guardian:id,name'
+            'guardian:id,name',
+            'birthplace:id,name',
+            'hometown:id,name',
         ])
             ->get()
             ->map(function ($child) {
@@ -31,6 +33,8 @@ class ChildController extends Controller
                     'status_code' => $child->status->code ?? null,
                     'status_name' => $child->status->name ?? '',
                     'created_at' => $child->created_at,
+                    'birthplace_name' => $child->birthplace->name ?? '',
+                    'hometown_name' => $child->hometown->name ?? '',
                 ];
             });
 
@@ -47,7 +51,7 @@ class ChildController extends Controller
     // GET by id
     public function show($id)
     {
-        $child = Child::find($id);
+        $child = Child::find($id, 'id');
 
         if (!$child) {
             return response()->json(['message' => 'Not found'], 404);
@@ -59,7 +63,7 @@ class ChildController extends Controller
     // PUT update
     public function update(Request $request, $id)
     {
-        $child = Child::find($id);
+        $child = Child::find($id, 'id');
 
         if (!$child) {
             return response()->json(['message' => 'Not found'], 404);
@@ -73,7 +77,7 @@ class ChildController extends Controller
     // DELETE
     public function destroy($id)
     {
-        $child = Child::find($id);
+        $child = Child::find($id, 'id');
 
         if (!$child) {
             return response()->json(['message' => 'Not found'], 404);

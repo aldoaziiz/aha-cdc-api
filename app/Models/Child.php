@@ -38,4 +38,14 @@ class Child extends Model
     {
         return $this->belongsTo(Guardian::class);
     }
+
+    public function birthplace()
+    {
+        return $this->belongsTo(City::class, 'birthplace_id');
+    }
+
+    public function hometown()
+    {
+        return $this->belongsTo(City::class, 'hometown_id');
+    }
 }
