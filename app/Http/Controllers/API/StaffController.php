@@ -5,34 +5,19 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Staff;
 use Illuminate\Http\Request;
+use App\Http\Resources\StaffResource;
 
 class StaffController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // GET all
     public function index()
     {
-        $staff = \App\Models\Staff::with(['role', 'status'])->get();
+        $staffs = Staff::with([
+            'staffRole',
+            'status'
+        ])->get();
 
-        return $staff->map(function ($s) {
-            return [
-                'id' => $s->id,
-                'name' => $s->name,
-                'title' => $s->title,
-                'email' => $s->email,
-                'phone' => $s->phone,
-                'address' => $s->address,
-                'status' => [
-                    'id' => $s->status_id,
-                    'name' => $s->status->name ?? '',
-                ],
-                'staff_role' => [
-                    'id' => $s->staff_role_id,
-                    'name' => $s->role->name ?? '',
-                ],
-            ];
-        });
+        return StaffResource::collection($staffs);
     }
 
     /**
@@ -50,8 +35,7 @@ class StaffController extends Controller
      */
     public function show($id)
     {
-        $staff = Staff::with(['status', 'role'])
-            ->find($id);
+        $staff = Staff::find($id, 'id');
 
         if (!$staff) {
             return response()->json(['message' => 'Not found'], 404);
@@ -65,8 +49,7 @@ class StaffController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $staff = Staff::with(['status', 'role'])
-            ->find($id);
+        $staff = Staff::find($id, 'id');
 
         if (!$staff) {
             return response()->json(['message' => 'Not found'], 404);

@@ -18,9 +18,9 @@ class Staff extends Model
         'status_id'
     ];
 
-    public function role()
+    public function staffRole()
     {
-        return $this->belongsTo(StaffRole::class, 'staff_role_id');
+        return $this->belongsTo(StaffRole::class);
     }
 
     public function status()

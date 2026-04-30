@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Guardian;
 use Illuminate\Http\Request;
+use App\Http\Resources\GuardianResource;
 
 class GuardianController extends Controller
 {
@@ -14,10 +15,10 @@ class GuardianController extends Controller
         $guardians = Guardian::with([
             'status',
             'role',
-            'children:id,guardian_id,name'
+            'children'
         ])->get();
 
-        return $guardians;
+        return GuardianResource::collection($guardians);
     }
 
     // POST create

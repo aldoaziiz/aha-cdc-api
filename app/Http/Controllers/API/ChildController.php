@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Child;
 use Illuminate\Http\Request;
+use App\Http\Resources\ChildResource;
 
 class ChildController extends Controller
 {
@@ -14,9 +15,14 @@ class ChildController extends Controller
         $children = Child::with([
             'program',
             'status',
+            'guardian',
+            'school',
+            'schoolClass',
+            'birthplace',
+            'hometown'
         ])->get();
 
-        return $children;
+        return ChildResource::collection($children);
     }
 
     // POST create
