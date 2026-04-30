@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Status;
-use App\Models\Role;
+use App\Models\GuardianRole;
 
 class Guardian extends Model
 {
@@ -14,12 +14,13 @@ class Guardian extends Model
         'address',
         'phone',
         'status_id',
-        'role_id',
     ];
 
     public function children()
     {
-        return $this->hasMany(Child::class);
+        return $this->belongsToMany(Child::class, 'child_guardians')
+            ->withPivot('guardian_role_id')
+            ->withTimestamps();
     }
 
     public function status()
@@ -29,6 +30,6 @@ class Guardian extends Model
 
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(GuardianRole::class);
     }
 }

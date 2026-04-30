@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Guardian;
 
-class Role extends Model
+class GuardianRole extends Model
 {
+    protected $table = 'guardian_roles';
+
     protected $fillable = [
         'name',
-        'role_id'
     ];
 
     public function guardians()

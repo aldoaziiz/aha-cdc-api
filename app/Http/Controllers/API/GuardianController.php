@@ -14,7 +14,6 @@ class GuardianController extends Controller
     {
         $guardians = Guardian::with([
             'status',
-            'role',
             'children'
         ])->get();
 

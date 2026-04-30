@@ -39,17 +39,31 @@ class ChildResource extends JsonResource
                 ];
             }),
 
-            'guardian' => $this->whenLoaded('guardian', function () {
-                return [
-                    'id' => $this->guardian->id,
-                    'name' => $this->guardian->name,
-                ];
+            'guardians' => $this->whenLoaded('guardians', function () {
+                return $this->guardians->map(function ($g) {
+                    return [
+                        'id' => $g->id,
+                        'name' => $g->name,
+                        'phone' => $g->phone,
+                        'guardian_role' => [
+                            'id' => $g->pivot->guardian_role_id,
+                            'name' => optional($g->pivot->role)->name,
+                        ]
+                    ];
+                });
             }),
 
             'school' => $this->whenLoaded('school', function () {
                 return [
                     'id' => $this->school->id,
                     'name' => $this->school->name,
+                ];
+            }),
+
+            "school_education" => $this->whenLoaded('schoolEducation', function () {
+                return [
+                    'id' => $this->schoolEducation->id,
+                    'name' => $this->schoolEducation->name,
                 ];
             }),
 

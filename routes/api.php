@@ -10,7 +10,10 @@ Route::get('/test', function () {
 });
 
 Route::apiResource('children', API\ChildController::class);
-// Route::post('/children/bulk', [ChildController::class, 'bulkStore']);
 Route::apiResource('guardians', API\GuardianController::class);
 Route::apiResource('staff', API\StaffController::class);
 Route::apiResource('schools', API\SchoolController::class);
+Route::apiResource('school-classes', API\SchoolClassController::class);
+Route::apiResource('school-educations', API\SchoolEducationController::class);
+Route::apiResource('clinics', API\ClinicController::class);
+Route::apiResource('payers', API\PayerController::class);

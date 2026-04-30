@@ -15,8 +15,9 @@ class ChildController extends Controller
         $children = Child::with([
             'program',
             'status',
-            'guardian',
+            'guardians',
             'school',
+            'schoolEducation',
             'schoolClass',
             'birthplace',
             'hometown'

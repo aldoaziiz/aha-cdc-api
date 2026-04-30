@@ -21,6 +21,7 @@ class Child extends Model
         'hometown_id',
         'school_id',
         'school_class_id',
+        'school_education_id',
     ];
 
     public function program()
@@ -56,5 +57,23 @@ class Child extends Model
     public function school()
     {
         return $this->belongsTo(School::class);
+    }
+
+    public function schoolEducation()
+    {
+        return $this->belongsTo(SchoolEducation::class);
+    }
+
+    public function registrations()
+    {
+        return $this->hasMany(Registration::class);
+    }
+
+    public function guardians()
+    {
+        return $this->belongsToMany(Guardian::class, 'child_guardians')
+            ->using(\App\Models\ChildGuardian::class)
+            ->withPivot('guardian_role_id')
+            ->withTimestamps();
     }
 }
