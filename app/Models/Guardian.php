@@ -16,6 +16,15 @@ class Guardian extends Model
         'status_id',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($guardian) {
+            if (!$guardian->status_id) {
+                $guardian->status_id = 1;
+            }
+        });
+    }
+
     public function children()
     {
         return $this->belongsToMany(Child::class, 'child_guardians')

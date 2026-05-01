@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Models\GuardianRole;
 
 class RegistrationResource extends JsonResource
 {
@@ -25,10 +26,15 @@ class RegistrationResource extends JsonResource
                 'birth_date' => $this->child->birth_date,
 
                 'guardians' => $this->child->guardians->map(function ($g) {
+                    $role = \App\Models\GuardianRole::find($g->pivot->guardian_role_id);
                     return [
                         'id' => $g->id,
                         'name' => $g->name,
                         'phone' => $g->phone,
+                        'guardian_role' => [
+                            'id' => $role?->id,
+                            'name' => $role?->name
+                        ],
                     ];
                 }),
             ],

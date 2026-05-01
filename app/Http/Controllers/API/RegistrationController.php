@@ -54,11 +54,18 @@ class RegistrationController extends Controller
             // ======================
             // 3. ATTACH PIVOT
             // ======================
-            $child->guardians()->syncWithoutDetaching([
-                $guardian->id => [
-                    'guardian_role_id' => $request->guardian['guardian_role_id']
-                ]
-            ]);
+            $roleId = $request->guardian['guardian_role_id'];
+
+            try {
+                $child->guardians()->attach($guardian->id, [
+                    'guardian_role_id' => $roleId
+                ]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                $child->guardians()->updateExistingPivot(
+                    $guardian->id,
+                    ['guardian_role_id' => $roleId]
+                );
+            }
 
             // ======================
             // 4. GENERATE REG NUMBER

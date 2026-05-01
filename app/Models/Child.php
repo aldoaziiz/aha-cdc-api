@@ -24,6 +24,15 @@ class Child extends Model
         'school_education_id',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($child) {
+            if (!$child->status_id) {
+                $child->status_id = 1;
+            }
+        });
+    }
+
     public function program()
     {
         return $this->belongsTo(Program::class);
