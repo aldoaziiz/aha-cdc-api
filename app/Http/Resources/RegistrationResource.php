@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class RegistrationResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'registration_number' => $this->registration_number,
+            'created_at' => $this->created_at,
+
+            'child' => [
+                'id' => $this->child->id,
+                'name' => $this->child->name,
+                'birth_date' => $this->child->birth_date,
+
+                'guardians' => $this->child->guardians->map(function ($g) {
+                    return [
+                        'id' => $g->id,
+                        'name' => $g->name,
+                        'phone' => $g->phone,
+                    ];
+                }),
+            ],
+
+            'program' => $this->program ? [
+                'id' => $this->program->id,
+                'name' => $this->program->name,
+            ] : null,
+        ];
+    }
+}
