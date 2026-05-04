@@ -13,7 +13,6 @@ class ChildController extends Controller
     public function index()
     {
         $children = Child::with([
-            'program',
             'status',
             'guardians',
             'school',

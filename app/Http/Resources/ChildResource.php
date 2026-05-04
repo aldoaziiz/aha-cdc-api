@@ -25,13 +25,6 @@ class ChildResource extends JsonResource
             'address' => $this->address,
             'created_at' => $this->created_at,
 
-            'program' => $this->whenLoaded('program', function () {
-                return [
-                    'id' => $this->program->id,
-                    'name' => $this->program->name,
-                ];
-            }),
-
             'status' => $this->whenLoaded('status', function () {
                 return [
                     'id' => $this->status->id,

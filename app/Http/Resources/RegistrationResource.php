@@ -42,7 +42,16 @@ class RegistrationResource extends JsonResource
             'program' => $this->program ? [
                 'id' => $this->program->id,
                 'name' => $this->program->name,
+                'price' => $this->program->price ?? 0,
             ] : null,
+
+            'payment_status' => $this->paymentStatus ? [
+                'id' => $this->paymentStatus->id,
+                'name' => $this->paymentStatus->name,
+            ] : null,
+
+            'payment_receipt' => $this->payment_receipt,
+            'complaint' => $this->complaint,
         ];
     }
 }

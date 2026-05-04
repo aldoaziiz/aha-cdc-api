@@ -9,7 +9,8 @@ class Program extends Model
     protected $table = 'programs';
     protected $fillable = [
         'name',
-        'description'
+        'description',
+        'price'
     ];
 
     public function children()

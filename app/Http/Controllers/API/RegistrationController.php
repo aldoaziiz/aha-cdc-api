@@ -93,4 +93,51 @@ class RegistrationController extends Controller
             ]);
         });
     }
+
+    public function show($id)
+    {
+        $data = Registration::with([
+            'child.guardians',
+            'program',
+            'paymentStatus'
+        ])->findOrFail($id);
+
+        return new RegistrationResource($data);
+    }
+
+    public function uploadReceipt(Request $request, $id)
+    {
+        $request->validate([
+            'file' => 'required|image|max:2048', // max 2MB (backup dari server)
+        ]);
+
+        $registration = Registration::findOrFail($id);
+
+        // simpan file
+        $path = $request->file('file')->store('receipts', 'public');
+
+        // simpan ke DB
+        $registration->update([
+            'payment_receipt' => $path,
+            'payment_status_id' => 2
+        ]);
+
+        return response()->json([
+            'message' => 'Upload success',
+            'path' => $path
+        ]);
+    }
+
+    public function markPaid($id)
+    {
+        $registration = Registration::findOrFail($id);
+
+        $registration->update([
+            'payment_status_id' => 3
+        ]);
+
+        return response()->json([
+            'message' => 'Marked as paid'
+        ]);
+    }
 }

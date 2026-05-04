@@ -13,6 +13,8 @@ class Registration extends Model
         'complaint',
         'program_id',
         'payer_id',
+        'payment_status_id',
+        'payment_receipt',
     ];
 
     public function child()
@@ -33,5 +35,10 @@ class Registration extends Model
     public function payer()
     {
         return $this->belongsTo(Payer::class);
+    }
+
+    public function paymentStatus()
+    {
+        return $this->belongsTo(PaymentStatus::class);
     }
 }
