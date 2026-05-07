@@ -6,22 +6,50 @@ use App\Http\Controllers\Controller;
 use App\Models\Child;
 use App\Models\Guardian;
 use App\Models\Registration;
+use App\Models\GuardianRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\RegistrationResource;
 
 class RegistrationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Registration::with([
+        $query = Registration::with([
             'child.guardians',
-            'program'
-        ])
-            ->latest()
-            ->get();
+            'program',
+            'paymentStatus'
+        ]);
 
-        return RegistrationResource::collection($data);
+        // SEARCH
+        if ($request->search) {
+            $query->whereHas('child', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // PAGINATION
+        $data = $query->paginate($request->per_page ?? 10);
+
+        // 🔥 TRANSFORM GUARDIAN ROLE
+        $data->getCollection()->transform(function ($registration) {
+
+            if ($registration->child && $registration->child->guardians) {
+
+                $registration->child->guardians->transform(function ($guardian) {
+
+                    $guardian->guardian_role = GuardianRole::find(
+                        $guardian->pivot->guardian_role_id
+                    );
+
+                    return $guardian;
+                });
+            }
+
+            return $registration;
+        });
+
+        return response()->json($data);
     }
 
     public function store(Request $request)

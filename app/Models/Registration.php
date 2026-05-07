@@ -41,4 +41,9 @@ class Registration extends Model
     {
         return $this->belongsTo(PaymentStatus::class);
     }
+
+    public function therapySessions()
+    {
+        return $this->hasMany(TherapySession::class);
+    }
 }

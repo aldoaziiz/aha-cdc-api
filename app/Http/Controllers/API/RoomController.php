@@ -3,33 +3,23 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Staff;
+use App\Models\Room;
 use Illuminate\Http\Request;
-use App\Http\Resources\StaffResource;
+use App\Http\Resources\RoomResource;
 
-class StaffController extends Controller
+class RoomController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Staff::with([
-            'status:id,name',
-            'staffRole:id,name'
+        $query = Room::with([
+            'status:id,name'
         ]);
-
-        // 🔥 FILTER ROLE
-        if ($request->staff_role_id) {
-            $query->where(
-                'staff_role_id',
-                $request->staff_role_id
-            );
-        }
 
         // SEARCH
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('email', 'like', '%' . $request->search . '%')
-                    ->orWhere('phone', 'like', '%' . $request->search . '%');
+                    ->orWhere('description', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -41,9 +31,9 @@ class StaffController extends Controller
      */
     public function store(Request $request)
     {
-        $staff = Staff::with(['status', 'role'])
+        $room = Room::with(['status'])
             ->create($request->all());
-        return response()->json($staff, 201);
+        return response()->json($room, 201);
     }
 
     /**
@@ -51,13 +41,13 @@ class StaffController extends Controller
      */
     public function show($id)
     {
-        $staff = Staff::find($id, 'id');
+        $room = Room::find($id);
 
-        if (!$staff) {
+        if (!$room) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        return response()->json($staff);
+        return response()->json($room);
     }
 
     /**
@@ -65,15 +55,15 @@ class StaffController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $staff = Staff::find($id, 'id');
+        $room = Room::find($id);
 
-        if (!$staff) {
+        if (!$room) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $staff->update($request->all());
+        $room->update($request->all());
 
-        return response()->json($staff);
+        return response()->json($room);
     }
 
     /**
@@ -81,14 +71,14 @@ class StaffController extends Controller
      */
     public function destroy($id)
     {
-        $staff = Staff::with(['status', 'role'])
+        $room = Room::with(['status'])
             ->find($id);
 
-        if (!$staff) {
+        if (!$room) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $staff->delete($id);
+        $room->delete();
 
         return response()->json(['message' => 'Deleted']);
     }

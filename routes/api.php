@@ -21,6 +21,8 @@ Route::apiResource('programs', API\ProgramController::class);
 Route::apiResource('guardian-roles', API\GuardianRoleController::class);
 Route::apiResource('cities', API\CityController::class);
 Route::apiResource('registrations', API\RegistrationController::class);
+Route::apiResource('therapy-sessions', API\TherapySessionController::class);
+Route::apiResource('rooms', API\RoomController::class);
 
 Route::get('/registrations/{id}', [API\RegistrationController::class, 'show']);
 

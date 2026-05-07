@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class StaffResource extends JsonResource
+class RoomResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -17,16 +17,7 @@ class StaffResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'address' => $this->address,
-
-            'staff_role' => $this->whenLoaded('staffRole', function () {
-                return [
-                    'id' => $this->staffRole->id,
-                    'name' => $this->staffRole->name,
-                ];
-            }),
+            'description' => $this->description,
 
             'status' => $this->whenLoaded('status', function () {
                 return [

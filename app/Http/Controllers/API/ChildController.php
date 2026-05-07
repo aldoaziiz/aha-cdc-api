@@ -9,20 +9,17 @@ use App\Http\Resources\ChildResource;
 
 class ChildController extends Controller
 {
-    // GET all
-    public function index()
+    public function index(Request $request)
     {
-        $children = Child::with([
-            'status',
-            'guardians',
-            'school',
-            'schoolEducation',
-            'schoolClass',
-            'birthplace',
-            'hometown'
-        ])->get();
+        $query = Child::with(['status:id,name']);
 
-        return ChildResource::collection($children);
+        // 🔍 SEARCH
+        if ($request->search) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // 🔥 PAGINATION
+        return $query->paginate($request->per_page ?? 10);
     }
 
     // POST create

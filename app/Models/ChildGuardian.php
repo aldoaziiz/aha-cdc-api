@@ -20,4 +20,9 @@ class ChildGuardian extends Pivot
             ->withPivot('role_id')
             ->withTimestamps();
     }
+
+    public function guardianRole()
+    {
+        return $this->belongsTo(GuardianRole::class);
+    }
 }

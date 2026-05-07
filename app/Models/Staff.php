@@ -9,7 +9,6 @@ class Staff extends Model
 {
     protected $fillable = [
         'name',
-        'title',
         'email',
         'phone',
         'address',
@@ -25,5 +24,10 @@ class Staff extends Model
     public function status()
     {
         return $this->belongsTo(Status::class);
+    }
+
+    public function therapySessions()
+    {
+        return $this->hasMany(TherapySession::class, 'therapist_id');
     }
 }

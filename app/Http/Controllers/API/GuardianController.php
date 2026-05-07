@@ -9,15 +9,20 @@ use App\Http\Resources\GuardianResource;
 
 class GuardianController extends Controller
 {
-    // GET all
-    public function index()
+    public function index(Request $request)
     {
-        $guardians = Guardian::with([
-            'status',
-            'children'
-        ])->get();
+        $query = Guardian::with('status:id,name');
 
-        return GuardianResource::collection($guardians);
+        // SEARCH
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('phone', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // PAGINATION
+        return $query->paginate($request->per_page ?? 10);
     }
 
     // POST create
