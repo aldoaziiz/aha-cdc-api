@@ -23,8 +23,18 @@ Route::apiResource('cities', API\CityController::class);
 Route::apiResource('registrations', API\RegistrationController::class);
 Route::apiResource('therapy-sessions', API\TherapySessionController::class);
 Route::apiResource('rooms', API\RoomController::class);
+Route::apiResource('activities', API\ActivityController::class);
 
 Route::get('/registrations/{id}', [API\RegistrationController::class, 'show']);
 
 Route::post('/registrations/{id}/upload-receipt', [API\RegistrationController::class, 'uploadReceipt']);
 Route::put('/registrations/{id}/mark-paid', [API\RegistrationController::class, 'markPaid']);
+
+Route::delete(
+    '/activity-photos/{activityPhoto}',
+    [API\ActivityPhotoController::class, 'destroy']
+);
+Route::delete(
+    '/activities/{activity}/video',
+    [API\ActivityController::class, 'deleteVideo']
+);

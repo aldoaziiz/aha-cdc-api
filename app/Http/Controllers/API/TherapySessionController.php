@@ -11,12 +11,60 @@ class TherapySessionController extends Controller
     public function index(Request $request)
     {
         $query = TherapySession::with([
-            'therapist',
+            'therapist.staffRole',
             'room',
-            'registration.child'
+            'registration.child',
+            'registration.program',
+            'activity.photos'
         ]);
 
-        // FILTER BY REGISTRATION
+        // ======================
+        // SEARCH CHILD
+        // ======================
+
+        if ($request->search) {
+
+            $query->whereHas(
+                'registration.child',
+                function ($q) use ($request) {
+
+                    $q->where(
+                        'name',
+                        'like',
+                        '%' . $request->search . '%'
+                    );
+                }
+            );
+        }
+
+        // ======================
+        // FILTER DATE
+        // ======================
+
+        if ($request->therapy_date) {
+
+            $query->whereDate(
+                'therapy_date',
+                $request->therapy_date
+            );
+        }
+
+        // ======================
+        // FILTER THERAPIST
+        // ======================
+
+        if ($request->therapist_id) {
+
+            $query->where(
+                'therapist_id',
+                $request->therapist_id
+            );
+        }
+
+        // ======================
+        // FILTER REGISTRATION
+        // ======================
+
         if ($request->registration_id) {
 
             $query->where(
@@ -25,13 +73,31 @@ class TherapySessionController extends Controller
             );
         }
 
-        // SORT TERBARU
+        // ======================
+        // WITHOUT ACTIVITY
+        // ======================
+
+        if ($request->without_activity) {
+
+            $query->whereDoesntHave('activity');
+        }
+
+        // ======================
+        // SORTING
+        // ======================
+
         $query->orderBy('therapy_date')
             ->orderBy('start_time');
 
-        return response()->json([
-            'data' => $query->get()
-        ]);
+        // ======================
+        // PAGINATION
+        // ======================
+
+        $data = $query->paginate(
+            $request->per_page ?? 10
+        );
+
+        return response()->json($data);
     }
 
     /**
