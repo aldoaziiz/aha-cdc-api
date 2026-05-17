@@ -21,6 +21,21 @@ class GuardianController extends Controller
             });
         }
 
+        // SORTING
+        if (
+            $request->sort_by &&
+            $request->sort_order
+        ) {
+
+            $query->orderBy(
+                $request->sort_by,
+                $request->sort_order
+            );
+        } else {
+
+            $query->latest();
+        }
+
         // PAGINATION
         return $query->paginate($request->per_page ?? 10);
     }
@@ -36,7 +51,7 @@ class GuardianController extends Controller
     // GET by id
     public function show($id)
     {
-        $guardian = Guardian::with(['status', 'role'])
+        $guardian = Guardian::with(['status', 'children:id,name'])
             ->find($id);
 
         if (!$guardian) {

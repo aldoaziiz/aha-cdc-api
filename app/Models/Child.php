@@ -16,7 +16,6 @@ class Child extends Model
         'address',
         'program_id',
         'status_id',
-        'guardian_id',
         'birthplace_id',
         'hometown_id',
         'school_id',
@@ -41,11 +40,6 @@ class Child extends Model
     public function status()
     {
         return $this->belongsTo(Status::class);
-    }
-
-    public function guardian()
-    {
-        return $this->belongsTo(Guardian::class);
     }
 
     public function birthplace()

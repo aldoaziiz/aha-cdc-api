@@ -25,11 +25,12 @@ Route::apiResource('therapy-sessions', API\TherapySessionController::class);
 Route::apiResource('rooms', API\RoomController::class);
 Route::apiResource('activities', API\ActivityController::class);
 
+// registration
 Route::get('/registrations/{id}', [API\RegistrationController::class, 'show']);
-
 Route::post('/registrations/{id}/upload-receipt', [API\RegistrationController::class, 'uploadReceipt']);
 Route::put('/registrations/{id}/mark-paid', [API\RegistrationController::class, 'markPaid']);
 
+// activity
 Route::delete(
     '/activity-photos/{activityPhoto}',
     [API\ActivityPhotoController::class, 'destroy']
@@ -37,4 +38,15 @@ Route::delete(
 Route::delete(
     '/activities/{activity}/video',
     [API\ActivityController::class, 'deleteVideo']
+);
+
+// children
+Route::post(
+    '/children/{child}/guardians',
+    [API\ChildGuardianController::class, 'store']
+);
+
+Route::delete(
+    '/children/{child}/guardians/{guardian}',
+    [API\ChildGuardianController::class, 'destroy']
 );

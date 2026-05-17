@@ -11,15 +11,48 @@ class ChildController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Child::with(['status:id,name']);
+        $query = Child::with([
+            'status:id,name'
+        ]);
 
-        // 🔍 SEARCH
+        // ======================
+        // SEARCH
+        // ======================
+
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+
+            $query->where(
+                'name',
+                'like',
+                '%' . $request->search . '%'
+            );
         }
 
-        // 🔥 PAGINATION
-        return $query->paginate($request->per_page ?? 10);
+        // ======================
+        // SORTING
+        // ======================
+
+        if (
+            $request->sort_by &&
+            $request->sort_order
+        ) {
+
+            $query->orderBy(
+                $request->sort_by,
+                $request->sort_order
+            );
+        } else {
+
+            $query->latest();
+        }
+
+        // ======================
+        // PAGINATION
+        // ======================
+
+        return $query->paginate(
+            $request->per_page ?? 10
+        );
     }
 
     // POST create
@@ -32,7 +65,15 @@ class ChildController extends Controller
     // GET by id
     public function show($id)
     {
-        $child = Child::find($id, 'id');
+        $child = Child::query()
+            ->with([
+                'birthplace:id,name',
+                'hometown:id,name',
+                'school:id,name',
+                'schoolClass:id,name',
+                'schoolEducation:id,name',
+                'guardians:id,name,phone'
+            ])->find($id);
 
         if (!$child) {
             return response()->json(['message' => 'Not found'], 404);
@@ -44,7 +85,7 @@ class ChildController extends Controller
     // PUT update
     public function update(Request $request, $id)
     {
-        $child = Child::find($id, 'id');
+        $child = Child::query()->find($id);
 
         if (!$child) {
             return response()->json(['message' => 'Not found'], 404);
@@ -58,13 +99,13 @@ class ChildController extends Controller
     // DELETE
     public function destroy($id)
     {
-        $child = Child::find($id, 'id');
+        $child = Child::query()->find($id);
 
         if (!$child) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        $child->delete();
+        $child->delete($id);
 
         return response()->json(['message' => 'Deleted']);
     }
