@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\RegistrationResource;
 use App\Models\Child;
 use App\Models\Guardian;
-use App\Models\Registration;
 use App\Models\GuardianRole;
+use App\Models\Registration;
+use App\Services\Auth\CreateGuardianUserService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Resources\RegistrationResource;
 
 class RegistrationController extends Controller
 {
@@ -18,13 +20,13 @@ class RegistrationController extends Controller
         $query = Registration::with([
             'child.guardians',
             'program',
-            'paymentStatus'
+            'paymentStatus',
         ]);
 
         // SEARCH
         if ($request->search) {
             $query->whereHas('child', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
+                $q->where('name', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -77,6 +79,18 @@ class RegistrationController extends Controller
                     'phone' => $request->guardian['phone'],
                     'address' => $request->guardian['address'],
                 ]);
+
+                // create guardian user account
+                $userService =
+                    new CreateGuardianUserService;
+
+                $user = $userService->execute(
+                    $guardian->email
+                );
+
+                $guardian->update([
+                    'user_id' => $user->id,
+                ]);
             }
 
             // ======================
@@ -86,9 +100,9 @@ class RegistrationController extends Controller
 
             try {
                 $child->guardians()->attach($guardian->id, [
-                    'guardian_role_id' => $roleId
+                    'guardian_role_id' => $roleId,
                 ]);
-            } catch (\Illuminate\Database\QueryException $e) {
+            } catch (QueryException $e) {
                 $child->guardians()->updateExistingPivot(
                     $guardian->id,
                     ['guardian_role_id' => $roleId]
@@ -102,7 +116,7 @@ class RegistrationController extends Controller
 
             $count = Registration::whereDate('created_at', now())->count() + 1;
 
-            $registrationNumber = 'REG-' . $today . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+            $registrationNumber = 'REG-'.$today.'-'.str_pad($count, 4, '0', STR_PAD_LEFT);
 
             // ======================
             // 5. CREATE REGISTRATION
@@ -117,7 +131,7 @@ class RegistrationController extends Controller
 
             return response()->json([
                 'message' => 'Registration created successfully',
-                'data' => $registration
+                'data' => $registration,
             ]);
         });
     }
@@ -127,10 +141,29 @@ class RegistrationController extends Controller
         $data = Registration::with([
             'child.guardians',
             'program',
-            'paymentStatus'
+            'paymentStatus',
+            'payer',
         ])->findOrFail($id);
 
         return new RegistrationResource($data);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $registration = Registration::findOrFail($id);
+
+        $validated = $request->validate([
+            'program_id' => 'nullable|exists:programs,id',
+            'payer_id' => 'nullable|exists:payers,id',
+            'complaint' => 'nullable|string',
+        ]);
+
+        $registration->update($validated);
+
+        return response()->json([
+            'message' => 'Registration updated successfully',
+            'data' => $registration->load(['program', 'payer']),
+        ]);
     }
 
     public function uploadReceipt(Request $request, $id)
@@ -147,12 +180,12 @@ class RegistrationController extends Controller
         // simpan ke DB
         $registration->update([
             'payment_receipt' => $path,
-            'payment_status_id' => 2
+            'payment_status_id' => 2,
         ]);
 
         return response()->json([
             'message' => 'Upload success',
-            'path' => $path
+            'path' => $path,
         ]);
     }
 
@@ -161,11 +194,11 @@ class RegistrationController extends Controller
         $registration = Registration::findOrFail($id);
 
         $registration->update([
-            'payment_status_id' => 3
+            'payment_status_id' => 3,
         ]);
 
         return response()->json([
-            'message' => 'Marked as paid'
+            'message' => 'Marked as paid',
         ]);
     }
 }

@@ -5,21 +5,20 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use Illuminate\Http\Request;
-use App\Http\Resources\RoomResource;
 
 class RoomController extends Controller
 {
     public function index(Request $request)
     {
         $query = Room::with([
-            'status:id,name'
+            'status:id,name',
         ]);
 
         // SEARCH
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('description', 'like', '%' . $request->search . '%');
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('description', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -33,6 +32,7 @@ class RoomController extends Controller
     {
         $room = Room::with(['status'])
             ->create($request->all());
+
         return response()->json($room, 201);
     }
 
@@ -43,7 +43,7 @@ class RoomController extends Controller
     {
         $room = Room::find($id);
 
-        if (!$room) {
+        if (! $room) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
@@ -57,7 +57,7 @@ class RoomController extends Controller
     {
         $room = Room::find($id);
 
-        if (!$room) {
+        if (! $room) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
@@ -74,7 +74,7 @@ class RoomController extends Controller
         $room = Room::with(['status'])
             ->find($id);
 
-        if (!$room) {
+        if (! $room) {
             return response()->json(['message' => 'Not found'], 404);
         }
 

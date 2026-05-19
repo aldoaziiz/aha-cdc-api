@@ -8,7 +8,7 @@ class Status extends Model
 {
     protected $fillable = [
         'code',
-        'name'
+        'name',
     ];
 
     public function children()

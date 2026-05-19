@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Staff;
 use Illuminate\Http\Request;
-use App\Http\Resources\StaffResource;
 
 class StaffController extends Controller
 {
@@ -13,7 +12,7 @@ class StaffController extends Controller
     {
         $query = Staff::with([
             'status:id,name',
-            'staffRole:id,name'
+            'staffRole:id,name',
         ]);
 
         // 🔥 FILTER ROLE
@@ -27,23 +26,55 @@ class StaffController extends Controller
         // SEARCH
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('email', 'like', '%' . $request->search . '%')
-                    ->orWhere('phone', 'like', '%' . $request->search . '%');
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('email', 'like', '%'.$request->search.'%')
+                    ->orWhere('phone', 'like', '%'.$request->search.'%');
             });
+        }
+
+        // SORTING
+        if ($request->sort_by && $request->sort_order) {
+            $query->orderBy($request->sort_by, $request->sort_order);
+        } else {
+            $query->latest();
         }
 
         return $query->paginate($request->per_page ?? 10);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // store
     public function store(Request $request)
     {
-        $staff = Staff::with(['status', 'role'])
-            ->create($request->all());
-        return response()->json($staff, 201);
+        $validated = $request->validate([
+
+            'name' => 'required|string|max:255',
+
+            'email' => 'required|email|max:255',
+
+            'phone' => 'nullable|string|max:255',
+
+            'address' => 'nullable|string',
+
+            'staff_role_id' => 'nullable|exists:staff_roles,id',
+
+        ]);
+
+        // DEFAULT ACTIVE
+
+        $validated['status_id'] = 1;
+
+        $staff = Staff::create($validated);
+
+        return response()->json([
+
+            'message' => 'Staff created successfully',
+
+            'data' => $staff->load([
+                'staffRole:id,name',
+                'status:id,name',
+            ]),
+
+        ], 201);
     }
 
     /**
@@ -51,29 +82,60 @@ class StaffController extends Controller
      */
     public function show($id)
     {
-        $staff = Staff::find($id, 'id');
+        $staff = Staff::query()->with([
+            'staffRole:id,name',
+        ])->find($id);
 
-        if (!$staff) {
+        if (! $staff) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
         return response()->json($staff);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-    {
-        $staff = Staff::find($id, 'id');
+    // update
+    public function update(
+        Request $request,
+        $id
+    ) {
+        $staff = Staff::query()
+            ->find($id);
 
-        if (!$staff) {
-            return response()->json(['message' => 'Not found'], 404);
+        if (! $staff) {
+
+            return response()->json([
+                'message' => 'Not found',
+            ], 404);
         }
 
-        $staff->update($request->all());
+        $validated = $request->validate([
 
-        return response()->json($staff);
+            'name' => 'sometimes|string|max:255',
+
+            'email' => 'sometimes|email|max:255',
+
+            'phone' => 'nullable|string|max:255',
+
+            'address' => 'nullable|string',
+
+            'staff_role_id' => 'nullable|exists:staff_roles,id',
+
+            'status_id' => 'nullable|exists:statuses,id',
+
+        ]);
+
+        $staff->update($validated);
+
+        return response()->json([
+
+            'message' => 'Staff updated successfully',
+
+            'data' => $staff->load([
+                'staffRole:id,name',
+                'status:id,name',
+            ]),
+
+        ]);
     }
 
     /**
@@ -84,7 +146,7 @@ class StaffController extends Controller
         $staff = Staff::with(['status', 'role'])
             ->find($id);
 
-        if (!$staff) {
+        if (! $staff) {
             return response()->json(['message' => 'Not found'], 404);
         }
 

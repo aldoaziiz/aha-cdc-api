@@ -5,9 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Models\ActivityPhoto;
-use Illuminate\Support\Facades\Storage;
-
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ActivityController extends Controller
 {
@@ -23,7 +22,7 @@ class ActivityController extends Controller
 
             'therapySession.therapist',
 
-            'therapySession.room'
+            'therapySession.room',
 
         ])
             ->join(
@@ -53,7 +52,7 @@ class ActivityController extends Controller
                     $q->where(
                         'name',
                         'like',
-                        '%' . $request->search . '%'
+                        '%'.$request->search.'%'
                     );
                 }
             );
@@ -77,7 +76,7 @@ class ActivityController extends Controller
             'therapy_session_id' => [
                 'required',
                 'exists:therapy_sessions,id',
-                'unique:activities,therapy_session_id'
+                'unique:activities,therapy_session_id',
             ],
 
             'caption' => 'nullable|string',
@@ -86,7 +85,7 @@ class ActivityController extends Controller
                 'nullable',
                 'file',
                 'mimetypes:video/mp4,video/quicktime,video/x-msvideo',
-                'max:51200'
+                'max:51200',
             ],
 
             'photos.*' => 'nullable|image|max:5120',
@@ -98,14 +97,13 @@ class ActivityController extends Controller
         // ======================
 
         if (
-            !$request->caption &&
-            !$request->hasFile('video') &&
-            !$request->hasFile('photos')
+            ! $request->caption &&
+            ! $request->hasFile('video') &&
+            ! $request->hasFile('photos')
         ) {
 
             return response()->json([
-                'message' =>
-                'Caption, photo, or video is required.'
+                'message' => 'Caption, photo, or video is required.',
             ], 422);
         }
 
@@ -131,14 +129,11 @@ class ActivityController extends Controller
 
         $activity = Activity::create([
 
-            'therapy_session_id' =>
-            $request->therapy_session_id,
+            'therapy_session_id' => $request->therapy_session_id,
 
-            'caption' =>
-            $request->caption,
+            'caption' => $request->caption,
 
-            'video' =>
-            $videoPath,
+            'video' => $videoPath,
 
         ]);
 
@@ -149,8 +144,7 @@ class ActivityController extends Controller
         if ($request->hasFile('photos')) {
 
             foreach (
-                $request->file('photos')
-                as $photo
+                $request->file('photos') as $photo
             ) {
 
                 $photoPath = $photo->store(
@@ -160,11 +154,9 @@ class ActivityController extends Controller
 
                 ActivityPhoto::create([
 
-                    'activity_id' =>
-                    $activity->id,
+                    'activity_id' => $activity->id,
 
-                    'photo' =>
-                    $photoPath
+                    'photo' => $photoPath,
 
                 ]);
             }
@@ -175,17 +167,15 @@ class ActivityController extends Controller
         // ======================
 
         return response()->json([
-            'message' =>
-            'Activity created successfully',
+            'message' => 'Activity created successfully',
 
-            'data' =>
-            $activity->load([
+            'data' => $activity->load([
                 'photos',
                 'therapySession.registration.child',
                 'therapySession.registration.program',
                 'therapySession.therapist',
-                'therapySession.room'
-            ])
+                'therapySession.room',
+            ]),
         ]);
     }
 
@@ -218,8 +208,7 @@ class ActivityController extends Controller
         $activity->delete();
 
         return response()->json([
-            'message' =>
-            'Activity deleted successfully'
+            'message' => 'Activity deleted successfully',
         ]);
     }
 
@@ -237,9 +226,9 @@ class ActivityController extends Controller
 
                 'therapySession.therapist',
 
-                'therapySession.room'
+                'therapySession.room',
 
-            ])
+            ]),
 
         ]);
     }
@@ -254,18 +243,16 @@ class ActivityController extends Controller
 
         $request->validate([
 
-            'caption' =>
-            'nullable|string',
+            'caption' => 'nullable|string',
 
             'video' => [
                 'nullable',
                 'file',
                 'mimetypes:video/mp4,video/quicktime,video/x-msvideo',
-                'max:51200'
+                'max:51200',
             ],
 
-            'photos.*' =>
-            'nullable|image|max:5120',
+            'photos.*' => 'nullable|image|max:5120',
 
         ]);
 
@@ -301,11 +288,9 @@ class ActivityController extends Controller
 
         $activity->update([
 
-            'caption' =>
-            $request->caption,
+            'caption' => $request->caption,
 
-            'video' =>
-            $videoPath
+            'video' => $videoPath,
 
         ]);
 
@@ -316,8 +301,7 @@ class ActivityController extends Controller
         if ($request->hasFile('photos')) {
 
             foreach (
-                $request->file('photos')
-                as $photo
+                $request->file('photos') as $photo
             ) {
 
                 $photoPath = $photo->store(
@@ -327,11 +311,9 @@ class ActivityController extends Controller
 
                 ActivityPhoto::create([
 
-                    'activity_id' =>
-                    $activity->id,
+                    'activity_id' => $activity->id,
 
-                    'photo' =>
-                    $photoPath
+                    'photo' => $photoPath,
 
                 ]);
             }
@@ -343,8 +325,7 @@ class ActivityController extends Controller
 
         return response()->json([
 
-            'message' =>
-            'Activity updated successfully',
+            'message' => 'Activity updated successfully',
 
             'data' => $activity->load([
 
@@ -356,9 +337,9 @@ class ActivityController extends Controller
 
                 'therapySession.therapist',
 
-                'therapySession.room'
+                'therapySession.room',
 
-            ])
+            ]),
 
         ]);
     }
@@ -381,13 +362,12 @@ class ActivityController extends Controller
         // ======================
 
         $activity->update([
-            'video' => null
+            'video' => null,
         ]);
 
         return response()->json([
 
-            'message' =>
-            'Video deleted successfully'
+            'message' => 'Video deleted successfully',
 
         ]);
     }

@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Program;
 use App\Http\Resources\ProgramResource;
+use App\Models\Program;
 
 class ProgramController extends Controller
 {

@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\School;
 use App\Http\Resources\SchoolResource;
+use App\Models\School;
 
 class SchoolController extends Controller
 {

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Guardian;
 use Illuminate\Http\Request;
-use App\Http\Resources\GuardianResource;
 
 class GuardianController extends Controller
 {
@@ -16,8 +15,8 @@ class GuardianController extends Controller
         // SEARCH
         if ($request->search) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('phone', 'like', '%' . $request->search . '%');
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('phone', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -40,12 +39,24 @@ class GuardianController extends Controller
         return $query->paginate($request->per_page ?? 10);
     }
 
-    // POST create
+    // post / create
     public function store(Request $request)
     {
-        $guardian = Guardian::with(['status', 'role'])
-            ->create($request->all());
-        return response()->json($guardian, 201);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'id_number' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'phone' => 'nullable|string|max:255',
+        ]);
+
+        $validated['status_id'] = 1;
+
+        $guardian = Guardian::create($validated);
+
+        return response()->json(
+            $guardian->load(['status:id,name', 'role:id,name']),
+            201
+        );
     }
 
     // GET by id
@@ -54,7 +65,7 @@ class GuardianController extends Controller
         $guardian = Guardian::with(['status', 'children:id,name'])
             ->find($id);
 
-        if (!$guardian) {
+        if (! $guardian) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
@@ -67,7 +78,7 @@ class GuardianController extends Controller
         $guardian = Guardian::with(['status', 'role'])
             ->find($id);
 
-        if (!$guardian) {
+        if (! $guardian) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
@@ -82,7 +93,7 @@ class GuardianController extends Controller
         $guardian = Guardian::with(['status', 'role'])
             ->find($id);
 
-        if (!$guardian) {
+        if (! $guardian) {
             return response()->json(['message' => 'Not found'], 404);
         }
 

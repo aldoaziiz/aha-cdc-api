@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\TherapySession;
+use Illuminate\Http\Request;
 
 class TherapySessionController extends Controller
 {
@@ -15,7 +15,7 @@ class TherapySessionController extends Controller
             'room',
             'registration.child',
             'registration.program',
-            'activity.photos'
+            'activity.photos',
         ]);
 
         // ======================
@@ -31,7 +31,7 @@ class TherapySessionController extends Controller
                     $q->where(
                         'name',
                         'like',
-                        '%' . $request->search . '%'
+                        '%'.$request->search.'%'
                     );
                 }
             );
@@ -114,14 +114,14 @@ class TherapySessionController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
 
-            'notes' => 'nullable'
+            'notes' => 'nullable',
         ]);
 
-        // 
+        //
         if ($request->start_time >= $request->end_time) {
 
             return response()->json([
-                'message' => 'End time must be greater than start time.'
+                'message' => 'End time must be greater than start time.',
             ], 422);
         }
 
@@ -133,7 +133,6 @@ class TherapySessionController extends Controller
                     ->where('end_time', '>', $request->start_time);
             })
             ->exists();
-
 
         // validasi terapis sudah ada jadwal di waktu yang sama
         if ($therapistConflict) {
@@ -155,7 +154,7 @@ class TherapySessionController extends Controller
             if ($roomConflict) {
 
                 return response()->json([
-                    'message' => 'Room already used at this time.'
+                    'message' => 'Room already used at this time.',
                 ], 422);
             }
         }
@@ -170,12 +169,12 @@ class TherapySessionController extends Controller
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
 
-            'notes' => $request->notes
+            'notes' => $request->notes,
         ]);
 
         return response()->json([
             'message' => 'Therapy session created',
-            'data' => $session
+            'data' => $session,
         ]);
     }
 
@@ -205,7 +204,7 @@ class TherapySessionController extends Controller
         $session->delete();
 
         return response()->json([
-            'message' => 'Session deleted'
+            'message' => 'Session deleted',
         ]);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Status;
 use Illuminate\Database\Seeder;
 
 class StatusSeeder extends Seeder
@@ -12,7 +12,7 @@ class StatusSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Status::insert([
+        Status::insert([
             [
                 'code' => 1,
                 'name' => 'Active',

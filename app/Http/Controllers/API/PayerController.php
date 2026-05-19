@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Payer;
 use App\Http\Resources\PayerResource;
+use App\Models\Payer;
 
 class PayerController extends Controller
 {

@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Child;
 use App\Models\Guardian;
-
 use Illuminate\Http\Request;
 
 class ChildGuardianController extends Controller
@@ -21,7 +19,7 @@ class ChildGuardianController extends Controller
     ) {
         $request->validate([
             'guardian_id' => 'required|exists:guardians,id',
-            'guardian_role_id' => 'required|exists:guardian_roles,id'
+            'guardian_role_id' => 'required|exists:guardian_roles,id',
         ]);
 
         $exists = $child->guardians()
@@ -34,22 +32,19 @@ class ChildGuardianController extends Controller
         if ($exists) {
 
             return response()->json([
-                'message' =>
-                'Guardian already attached to this child.'
+                'message' => 'Guardian already attached to this child.',
             ], 422);
         }
 
         $child->guardians()
             ->attach([
                 $request->guardian_id => [
-                    'guardian_role_id' =>
-                    $request->guardian_role_id
-                ]
+                    'guardian_role_id' => $request->guardian_role_id,
+                ],
             ]);
 
         return response()->json([
-            'message' =>
-            'Guardian attached successfully'
+            'message' => 'Guardian attached successfully',
         ]);
     }
 
@@ -67,12 +62,11 @@ class ChildGuardianController extends Controller
 
         if (
             $child->guardians()
-            ->count() <= 1
+                ->count() <= 1
         ) {
 
             return response()->json([
-                'message' =>
-                'Child must have at least one guardian.'
+                'message' => 'Child must have at least one guardian.',
             ], 422);
         }
 
@@ -84,8 +78,7 @@ class ChildGuardianController extends Controller
             ->detach($guardian->id);
 
         return response()->json([
-            'message' =>
-            'Guardian removed successfully'
+            'message' => 'Guardian removed successfully',
         ]);
     }
 }

@@ -1,17 +1,19 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API;
+use App\Http\Controllers\API\AuthController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/test', function () {
     return response()->json([
-        'message' => 'API jalan bro'
+        'message' => 'API jalan bro',
     ]);
 });
 
 Route::apiResource('children', API\ChildController::class);
 Route::apiResource('guardians', API\GuardianController::class);
 Route::apiResource('staff', API\StaffController::class);
+Route::apiResource('staff-roles', API\StaffRoleController::class);
 Route::apiResource('schools', API\SchoolController::class);
 Route::apiResource('school-classes', API\SchoolClassController::class);
 Route::apiResource('school-educations', API\SchoolEducationController::class);
@@ -50,3 +52,30 @@ Route::delete(
     '/children/{child}/guardians/{guardian}',
     [API\ChildGuardianController::class, 'destroy']
 );
+
+// ======================
+// AUTH
+// ======================
+
+Route::post(
+    '/login',
+    [AuthController::class, 'login']
+);
+
+// ======================
+// PROTECTED
+// ======================
+
+Route::middleware('auth:sanctum')
+    ->group(function () {
+
+        Route::get(
+            '/me',
+            [AuthController::class, 'me']
+        );
+
+        Route::post(
+            '/logout',
+            [AuthController::class, 'logout']
+        );
+    });

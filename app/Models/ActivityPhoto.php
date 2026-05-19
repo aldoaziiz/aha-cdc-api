@@ -8,7 +8,7 @@ class ActivityPhoto extends Model
 {
     protected $fillable = [
         'activity_id',
-        'photo'
+        'photo',
     ];
 
     // ======================

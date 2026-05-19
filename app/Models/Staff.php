@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Status;
 
 class Staff extends Model
 {
@@ -13,7 +12,8 @@ class Staff extends Model
         'phone',
         'address',
         'staff_role_id',
-        'status_id'
+        'status_id',
+        'user_id',
     ];
 
     public function staffRole()
@@ -29,5 +29,12 @@ class Staff extends Model
     public function therapySessions()
     {
         return $this->hasMany(TherapySession::class, 'therapist_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(
+            User::class
+        );
     }
 }

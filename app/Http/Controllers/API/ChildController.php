@@ -5,14 +5,13 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Child;
 use Illuminate\Http\Request;
-use App\Http\Resources\ChildResource;
 
 class ChildController extends Controller
 {
     public function index(Request $request)
     {
         $query = Child::with([
-            'status:id,name'
+            'status:id,name',
         ]);
 
         // ======================
@@ -24,7 +23,7 @@ class ChildController extends Controller
             $query->where(
                 'name',
                 'like',
-                '%' . $request->search . '%'
+                '%'.$request->search.'%'
             );
         }
 
@@ -59,6 +58,7 @@ class ChildController extends Controller
     public function store(Request $request)
     {
         $child = Child::create($request->all());
+
         return response()->json($child, 201);
     }
 
@@ -72,10 +72,10 @@ class ChildController extends Controller
                 'school:id,name',
                 'schoolClass:id,name',
                 'schoolEducation:id,name',
-                'guardians:id,name,phone'
+                'guardians:id,name,phone',
             ])->find($id);
 
-        if (!$child) {
+        if (! $child) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
@@ -87,7 +87,7 @@ class ChildController extends Controller
     {
         $child = Child::query()->find($id);
 
-        if (!$child) {
+        if (! $child) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
@@ -101,7 +101,7 @@ class ChildController extends Controller
     {
         $child = Child::query()->find($id);
 
-        if (!$child) {
+        if (! $child) {
             return response()->json(['message' => 'Not found'], 404);
         }
 

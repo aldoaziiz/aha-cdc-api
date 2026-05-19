@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Status;
-use App\Models\GuardianRole;
 
 class Guardian extends Model
 {
@@ -14,12 +12,13 @@ class Guardian extends Model
         'address',
         'phone',
         'status_id',
+        'user_id',
     ];
 
     protected static function booted()
     {
         static::creating(function ($guardian) {
-            if (!$guardian->status_id) {
+            if (! $guardian->status_id) {
                 $guardian->status_id = 1;
             }
         });
@@ -40,5 +39,12 @@ class Guardian extends Model
     public function role()
     {
         return $this->belongsTo(GuardianRole::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(
+            User::class
+        );
     }
 }

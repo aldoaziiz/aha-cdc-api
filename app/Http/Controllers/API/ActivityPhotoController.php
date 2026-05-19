@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\ActivityPhoto;
-
 use Illuminate\Support\Facades\Storage;
 
 class ActivityPhotoController extends Controller
@@ -30,8 +28,7 @@ class ActivityPhotoController extends Controller
 
         return response()->json([
 
-            'message' =>
-            'Photo deleted successfully'
+            'message' => 'Photo deleted successfully',
 
         ]);
     }

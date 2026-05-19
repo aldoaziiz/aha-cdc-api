@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\City;
 use App\Http\Resources\CityResource;
+use App\Models\City;
 
 class CityController extends Controller
 {

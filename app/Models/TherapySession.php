@@ -13,7 +13,7 @@ class TherapySession extends Model
         'therapy_date',
         'start_time',
         'end_time',
-        'notes'
+        'notes',
     ];
 
     // ======================

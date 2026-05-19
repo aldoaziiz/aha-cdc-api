@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ChildResource extends JsonResource
@@ -41,7 +40,7 @@ class ChildResource extends JsonResource
                         'guardian_role' => [
                             'id' => $g->pivot->guardian_role_id,
                             'name' => optional($g->pivot->role)->name,
-                        ]
+                        ],
                     ];
                 });
             }),
@@ -53,7 +52,7 @@ class ChildResource extends JsonResource
                 ];
             }),
 
-            "school_education" => $this->whenLoaded('schoolEducation', function () {
+            'school_education' => $this->whenLoaded('schoolEducation', function () {
                 return [
                     'id' => $this->schoolEducation->id,
                     'name' => $this->schoolEducation->name,

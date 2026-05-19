@@ -26,7 +26,7 @@ class Child extends Model
     protected static function booted()
     {
         static::creating(function ($child) {
-            if (!$child->status_id) {
+            if (! $child->status_id) {
                 $child->status_id = 1;
             }
         });
@@ -75,7 +75,7 @@ class Child extends Model
     public function guardians()
     {
         return $this->belongsToMany(Guardian::class, 'child_guardians')
-            ->using(\App\Models\ChildGuardian::class)
+            ->using(ChildGuardian::class)
             ->withPivot('guardian_role_id')
             ->withTimestamps();
     }

@@ -8,6 +8,6 @@ class Clinic extends Model
 {
     protected $fillable = [
         'name',
-        'address'
+        'address',
     ];
 }

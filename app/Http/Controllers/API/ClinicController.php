@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Clinic;
 use App\Http\Resources\ClinicResource;
+use App\Models\Clinic;
 
 class ClinicController extends Controller
 {

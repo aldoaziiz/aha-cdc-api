@@ -11,11 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('children', function (Blueprint $table) {
-            $table->foreignId('program_id')
+        Schema::table('guardians', function (
+            Blueprint $table
+        ) {
+
+            $table->foreignId('user_id')
                 ->nullable()
-                ->constrained('programs')
-                ->onDelete('set null');
+                ->after('id')
+                ->constrained()
+                ->nullOnDelete();
+
         });
     }
 
@@ -24,8 +29,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('children', function (Blueprint $table) {
-            //
+        Schema::table('guardians', function (
+            Blueprint $table
+        ) {
+
+            $table->dropConstrainedForeignId(
+                'user_id'
+            );
+
         });
     }
 };

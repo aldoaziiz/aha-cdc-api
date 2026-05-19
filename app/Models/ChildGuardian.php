@@ -16,7 +16,7 @@ class ChildGuardian extends Pivot
     public function guardians()
     {
         return $this->belongsToMany(Guardian::class, 'child_guardians')
-            ->using(\App\Models\ChildGuardian::class)
+            ->using(ChildGuardian::class)
             ->withPivot('role_id')
             ->withTimestamps();
     }

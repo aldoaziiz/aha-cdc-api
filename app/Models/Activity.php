@@ -9,7 +9,7 @@ class Activity extends Model
     protected $fillable = [
         'therapy_session_id',
         'caption',
-        'video'
+        'video',
     ];
 
     // ======================
