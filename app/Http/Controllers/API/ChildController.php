@@ -8,6 +8,21 @@ use Illuminate\Http\Request;
 
 class ChildController extends Controller
 {
+    private function forbidNonAdmin()
+    {
+        if (
+            auth()->user()->role !==
+            'admin'
+        ) {
+
+            abort(
+                403,
+                'Forbidden'
+            );
+
+        }
+    }
+
     public function index(Request $request)
     {
         $query = Child::with([
@@ -57,6 +72,8 @@ class ChildController extends Controller
     // POST create
     public function store(Request $request)
     {
+        $this->forbidNonAdmin();
+
         $child = Child::create($request->all());
 
         return response()->json($child, 201);
@@ -85,6 +102,8 @@ class ChildController extends Controller
     // PUT update
     public function update(Request $request, $id)
     {
+        $this->forbidNonAdmin();
+
         $child = Child::query()->find($id);
 
         if (! $child) {
@@ -99,6 +118,8 @@ class ChildController extends Controller
     // DELETE
     public function destroy($id)
     {
+        $this->forbidNonAdmin();
+
         $child = Child::query()->find($id);
 
         if (! $child) {

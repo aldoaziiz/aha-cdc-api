@@ -15,6 +15,36 @@ use Illuminate\Support\Facades\DB;
 
 class RegistrationController extends Controller
 {
+    private function forbidNonAdmin()
+    {
+        if (
+            auth()->user()->role !==
+            'admin'
+        ) {
+
+            abort(
+                403,
+                'Forbidden'
+            );
+
+        }
+    }
+
+    private function forbidTherapist()
+    {
+        if (
+            auth()->user()->role ===
+            'therapist'
+        ) {
+
+            abort(
+                403,
+                'Forbidden'
+            );
+
+        }
+    }
+
     public function index(Request $request)
     {
         $query = Registration::with([
@@ -150,6 +180,8 @@ class RegistrationController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->forbidNonAdmin();
+
         $registration = Registration::findOrFail($id);
 
         $validated = $request->validate([
@@ -168,6 +200,8 @@ class RegistrationController extends Controller
 
     public function uploadReceipt(Request $request, $id)
     {
+        $this->forbidTherapist();
+
         $request->validate([
             'file' => 'required|image|max:2048', // max 2MB (backup dari server)
         ]);
@@ -191,6 +225,8 @@ class RegistrationController extends Controller
 
     public function markPaid($id)
     {
+        $this->forbidNonAdmin();
+
         $registration = Registration::findOrFail($id);
 
         $registration->update([

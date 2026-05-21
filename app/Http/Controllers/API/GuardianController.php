@@ -8,6 +8,21 @@ use Illuminate\Http\Request;
 
 class GuardianController extends Controller
 {
+    private function forbidNonAdmin()
+    {
+        if (
+            auth()->user()->role !==
+            'admin'
+        ) {
+
+            abort(
+                403,
+                'Forbidden'
+            );
+
+        }
+    }
+
     public function index(Request $request)
     {
         $query = Guardian::with('status:id,name');
@@ -42,6 +57,8 @@ class GuardianController extends Controller
     // post / create
     public function store(Request $request)
     {
+        $this->forbidNonAdmin();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'id_number' => 'nullable|string|max:255',
@@ -75,6 +92,8 @@ class GuardianController extends Controller
     // PUT update
     public function update(Request $request, $id)
     {
+        $this->forbidNonAdmin();
+
         $guardian = Guardian::with(['status', 'role'])
             ->find($id);
 
@@ -90,6 +109,8 @@ class GuardianController extends Controller
     // DELETE
     public function destroy($id)
     {
+        $this->forbidNonAdmin();
+
         $guardian = Guardian::with(['status', 'role'])
             ->find($id);
 

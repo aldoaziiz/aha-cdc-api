@@ -8,8 +8,36 @@ use Illuminate\Http\Request;
 
 class TherapySessionController extends Controller
 {
+    private function forbidNonAdmin()
+    {
+        if (
+            auth()->user()->role !==
+            'admin'
+        ) {
+
+            abort(
+                403,
+                'Forbidden'
+            );
+
+        }
+    }
+
     public function index(Request $request)
     {
+        $user = auth()->user();
+        if (
+            $user->role ===
+            'guardian'
+        ) {
+
+            abort(
+                403,
+                'Forbidden'
+            );
+
+        }
+
         $query = TherapySession::with([
             'therapist.staffRole',
             'room',
@@ -17,6 +45,22 @@ class TherapySessionController extends Controller
             'registration.program',
             'activity.photos',
         ]);
+
+        // ======================
+        // THERAPIST FILTER
+        // ======================
+
+        if (
+            $user->role ===
+            'therapist'
+        ) {
+
+            $query->where(
+                'therapist_id',
+                $user->staff->id
+            );
+
+        }
 
         // ======================
         // SEARCH CHILD
@@ -100,11 +144,10 @@ class TherapySessionController extends Controller
         return response()->json($data);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        $this->forbidNonAdmin();
+
         $request->validate([
             'registration_id' => 'required|exists:registrations,id',
             'therapist_id' => 'required|exists:staff,id',
@@ -178,27 +221,20 @@ class TherapySessionController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $this->forbidNonAdmin();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
+        $this->forbidNonAdmin();
+
         $session = TherapySession::findOrFail($id);
 
         $session->delete();

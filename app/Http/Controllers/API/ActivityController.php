@@ -10,20 +10,31 @@ use Illuminate\Support\Facades\Storage;
 
 class ActivityController extends Controller
 {
+    private function forbidGuardian()
+    {
+        if (
+            auth()->user()->role ===
+            'guardian'
+        ) {
+
+            abort(
+                403,
+                'Forbidden'
+            );
+
+        }
+    }
+
     public function index(Request $request)
     {
+        $user = auth()->user();
+
         $query = Activity::with([
-
             'photos',
-
             'therapySession.registration.child',
-
             'therapySession.registration.program',
-
             'therapySession.therapist',
-
             'therapySession.room',
-
         ])
             ->join(
                 'therapy_sessions',
@@ -38,6 +49,60 @@ class ActivityController extends Controller
                 'therapy_sessions.start_time'
             )
             ->select('activities.*');
+
+        // ======================
+        // GUARDIAN FILTER
+        // ======================
+
+        if ($user->role === 'guardian') {
+
+            $guardian =
+                $user->guardian;
+
+            $childIds =
+                $guardian
+                    ->children()
+                    ->pluck('children.id');
+
+            $query->whereHas(
+
+                'therapySession.registration',
+
+                function ($q) use ($childIds) {
+
+                    $q->whereIn(
+                        'child_id',
+                        $childIds
+                    );
+
+                }
+
+            );
+
+        }
+
+        // ======================
+        // THERAPIST FILTER
+        // ======================
+
+        if ($user->role === 'therapist') {
+
+            $query->whereHas(
+
+                'therapySession',
+
+                function ($q) use ($user) {
+
+                    $q->where(
+                        'therapist_id',
+                        $user->staff->id
+                    );
+
+                }
+
+            );
+
+        }
 
         // ======================
         // SEARCH CHILD
@@ -67,6 +132,8 @@ class ActivityController extends Controller
 
     public function store(Request $request)
     {
+        $this->forbidGuardian();
+
         // ======================
         // VALIDATION
         // ======================
@@ -181,6 +248,40 @@ class ActivityController extends Controller
 
     public function destroy(Activity $activity)
     {
+        $this->forbidGuardian();
+
+        // ======================
+        // THERAPIST OWNERSHIP
+        // ======================
+
+        if (
+            auth()->user()->role ===
+            'therapist'
+        ) {
+
+            if (
+
+                $activity
+                    ->therapySession
+                    ->therapist_id
+
+                !==
+
+                auth()->user()
+                    ->staff
+                    ->id
+
+            ) {
+
+                abort(
+                    403,
+                    'Forbidden'
+                );
+
+            }
+
+        }
+
         // ======================
         // DELETE PHOTOS
         // ======================
@@ -233,10 +334,11 @@ class ActivityController extends Controller
         ]);
     }
 
-    public function update(
-        Request $request,
-        Activity $activity
-    ) {
+    public function update(Request $request, Activity $activity)
+    {
+
+        $this->forbidGuardian();
+
         // ======================
         // VALIDATION
         // ======================
@@ -255,6 +357,31 @@ class ActivityController extends Controller
             'photos.*' => 'nullable|image|max:5120',
 
         ]);
+
+        if (
+            auth()->user()->role ===
+            'therapist'
+        ) {
+
+            if (
+
+                $activity
+                    ->therapySession
+                    ->therapist_id
+
+                !==
+
+                auth()->user()
+                    ->staff
+                    ->id
+
+            ) {
+
+                abort(403);
+
+            }
+
+        }
 
         // ======================
         // UPDATE VIDEO
@@ -344,9 +471,43 @@ class ActivityController extends Controller
         ]);
     }
 
-    public function deleteVideo(
-        Activity $activity
-    ) {
+    public function deleteVideo(Activity $activity)
+    {
+
+        $this->forbidGuardian();
+
+        // ======================
+        // THERAPIST OWNERSHIP
+        // ======================
+
+        if (
+            auth()->user()->role ===
+            'therapist'
+        ) {
+
+            if (
+
+                $activity
+                    ->therapySession
+                    ->therapist_id
+
+                !==
+
+                auth()->user()
+                    ->staff
+                    ->id
+
+            ) {
+
+                abort(
+                    403,
+                    'Forbidden'
+                );
+
+            }
+
+        }
+
         // ======================
         // DELETE FILE
         // ======================
