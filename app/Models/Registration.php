@@ -15,6 +15,7 @@ class Registration extends Model
         'payer_id',
         'payment_status_id',
         'payment_receipt',
+        'invoice_token',
     ];
 
     public function child()

@@ -34,6 +34,88 @@ Route::post(
     [API\RegistrationController::class, 'store']
 );
 
+Route::get(
+    '/public-registration/children',
+    [API\RegistrationController::class,
+        'publicChildren']
+);
+
+Route::get(
+    '/public-registration/guardians',
+    [API\RegistrationController::class,
+        'publicGuardians']
+);
+
+// PUBLIC LOOKUP
+
+Route::get(
+    '/guardian-roles',
+    [API\GuardianRoleController::class,
+        'index']
+);
+
+Route::get(
+    '/programs',
+    [API\ProgramController::class,
+        'index']
+);
+
+Route::get(
+    '/payers',
+    [API\PayerController::class,
+        'index']
+);
+
+Route::get(
+    '/cities',
+    [API\CityController::class,
+        'index']
+);
+
+Route::get(
+    '/schools',
+    [API\SchoolController::class,
+        'index']
+);
+
+Route::get(
+    '/school-classes',
+    [API\SchoolClassController::class,
+        'index']
+);
+
+Route::get(
+    '/school-educations',
+    [API\SchoolEducationController::class,
+        'index']
+);
+
+Route::get(
+    '/rooms',
+    [API\RoomController::class,
+        'index']
+);
+
+// PUBLIC UPLOAD
+
+Route::post(
+
+    '/invoice-upload/{token}',
+
+    [API\RegistrationController::class,
+        'uploadReceiptByToken']
+
+);
+
+Route::get(
+
+    '/invoice-upload/{token}',
+
+    [API\RegistrationController::class,
+        'invoiceByToken']
+
+);
+
 // ======================
 // PROTECTED
 // ======================
@@ -53,6 +135,15 @@ Route::middleware('auth:sanctum')
         Route::post(
             '/logout',
             [AuthController::class, 'logout']
+        );
+
+        Route::post(
+
+            '/registrations/{registration}/generate-invoice-link',
+
+            [API\RegistrationController::class,
+                'generateInvoiceLink']
+
         );
 
         // ======================
@@ -82,47 +173,74 @@ Route::middleware('auth:sanctum')
         Route::apiResource(
             'schools',
             API\SchoolController::class
-        );
+        )->except([
+            'index',
+            'show',
+        ]);
 
         Route::apiResource(
             'school-classes',
             API\SchoolClassController::class
-        );
+        )->except([
+            'index',
+            'show',
+        ]);
 
         Route::apiResource(
             'school-educations',
             API\SchoolEducationController::class
-        );
+        )->except([
+            'index',
+            'show',
+        ]);
 
         Route::apiResource(
             'clinics',
             API\ClinicController::class
-        );
+        )->except([
+            'index',
+            'show',
+        ]);
 
         Route::apiResource(
             'payers',
             API\PayerController::class
-        );
+        )->except([
+            'index',
+            'show',
+        ]);
 
         Route::apiResource(
             'programs',
             API\ProgramController::class
-        );
+        )->except([
+            'index',
+            'show',
+        ]);
 
         Route::apiResource(
             'guardian-roles',
             API\GuardianRoleController::class
-        );
+        )->except([
+            'index',
+            'show',
+        ]);
 
         Route::apiResource(
             'cities',
             API\CityController::class
-        );
+        )->except([
+            'index',
+            'show',
+        ]);
 
         Route::apiResource(
             'rooms',
             API\RoomController::class
-        );
+        )->except([
+            'index',
+            'show',
+        ]);
 
         // ======================
         // TRANSACTIONS

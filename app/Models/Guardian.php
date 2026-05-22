@@ -10,6 +10,7 @@ class Guardian extends Model
         'name',
         'id_number',
         'address',
+        'email',
         'phone',
         'status_id',
         'user_id',

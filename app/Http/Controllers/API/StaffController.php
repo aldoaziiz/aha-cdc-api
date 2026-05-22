@@ -4,6 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Staff;
+use App\Models\StaffRole;
+use App\Models\User;
+use App\Services\Auth\CreateStaffUserService;
 use Illuminate\Http\Request;
 
 class StaffController extends Controller
@@ -42,7 +45,6 @@ class StaffController extends Controller
         return $query->paginate($request->per_page ?? 10);
     }
 
-    // store
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -59,27 +61,130 @@ class StaffController extends Controller
 
         ]);
 
-        // DEFAULT ACTIVE
+        // ======================
+        // CHECK EMAIL
+        // ======================
+
+        $emailExists =
+            User::where(
+                'email',
+                $validated['email']
+            )->exists();
+
+        if ($emailExists) {
+
+            return response()->json([
+
+                'message' => 'Email already registered',
+
+            ], 422);
+
+        }
+
+        // ======================
+        // DEFAULT STATUS
+        // ======================
 
         $validated['status_id'] = 1;
 
-        $staff = Staff::create($validated);
+        // ======================
+        // DETERMINE ROLE
+        // ======================
+
+        $role = 'staff';
+
+        if ($validated['staff_role_id']) {
+
+            $staffRole =
+                StaffRole::find(
+                    $validated['staff_role_id']
+                );
+
+            $staffRoleName =
+                strtolower(
+                    $staffRole?->name ?? ''
+                );
+
+            if (
+
+                str_contains(
+                    $staffRoleName,
+                    'therapist'
+                )
+
+            ) {
+
+                $role = 'therapist';
+
+            }
+
+            if (
+
+                str_contains(
+                    $staffRoleName,
+                    'admin'
+                )
+
+            ) {
+
+                $role = 'admin';
+
+            }
+        }
+
+        // ======================
+        // CREATE STAFF
+        // ======================
+
+        $staff = Staff::create(
+            $validated
+        );
+
+        // ======================
+        // CREATE USER
+        // ======================
+
+        $userService =
+            new CreateStaffUserService;
+
+        $user =
+            $userService->execute(
+
+                $staff->name,
+
+                $staff->email,
+
+                $staff->phone,
+
+                $role
+
+            );
+
+        // ======================
+        // CONNECT USER
+        // ======================
+
+        $staff->update([
+
+            'user_id' => $user->id,
+
+        ]);
 
         return response()->json([
 
             'message' => 'Staff created successfully',
 
             'data' => $staff->load([
+
                 'staffRole:id,name',
+
                 'status:id,name',
+
             ]),
 
         ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $staff = Staff::query()->with([
@@ -138,9 +243,6 @@ class StaffController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         $staff = Staff::with(['status', 'role'])

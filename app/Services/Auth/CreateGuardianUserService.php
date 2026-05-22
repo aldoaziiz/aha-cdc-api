@@ -4,12 +4,13 @@ namespace App\Services\Auth;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class CreateGuardianUserService
 {
     public function execute(
-        string $email
+        string $name,
+        string $email,
+        string $phone
     ): User {
 
         // ======================
@@ -25,25 +26,18 @@ class CreateGuardianUserService
         }
 
         // ======================
-        // GENERATE PASSWORD
-        // ======================
-
-        $temporaryPassword =
-            Str::random(10);
-
-        // ======================
         // CREATE USER
         // ======================
 
         return User::query()
             ->create([
 
-                'name' => $email,
+                'name' => $name,
 
                 'email' => $email,
 
                 'password' => Hash::make(
-                    $temporaryPassword
+                    $phone
                 ),
 
                 'role' => 'guardian',
