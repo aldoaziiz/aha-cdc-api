@@ -110,7 +110,6 @@ class AuthController extends Controller
             );
 
         return response()->json(
-
             $request->user()->load([
 
                 'guardian.children',
@@ -118,7 +117,6 @@ class AuthController extends Controller
                 'staff.staffRole',
 
             ])
-
         );
     }
 
@@ -136,6 +134,35 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Logout success',
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        $user = auth()->user();
+
+        if (! Hash::check(
+            $validated['current_password'],
+            $user->password
+        )) {
+
+            return response()->json([
+                'message' => 'Current password is incorrect',
+            ], 422);
+
+        }
+
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return response()->json([
+            'message' => 'Password changed successfully',
         ]);
     }
 }

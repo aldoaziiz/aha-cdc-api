@@ -65,9 +65,7 @@ class ActivityController extends Controller
                     ->pluck('children.id');
 
             $query->whereHas(
-
                 'therapySession.registration',
-
                 function ($q) use ($childIds) {
 
                     $q->whereIn(
@@ -76,7 +74,6 @@ class ActivityController extends Controller
                     );
 
                 }
-
             );
 
         }
@@ -88,9 +85,7 @@ class ActivityController extends Controller
         if ($user->role === 'therapist') {
 
             $query->whereHas(
-
                 'therapySession',
-
                 function ($q) use ($user) {
 
                     $q->where(
@@ -99,7 +94,6 @@ class ActivityController extends Controller
                     );
 
                 }
-
             );
 
         }

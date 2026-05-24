@@ -99,21 +99,15 @@ Route::get(
 // PUBLIC UPLOAD
 
 Route::post(
-
     '/invoice-upload/{token}',
-
     [API\RegistrationController::class,
         'uploadReceiptByToken']
-
 );
 
 Route::get(
-
     '/invoice-upload/{token}',
-
     [API\RegistrationController::class,
         'invoiceByToken']
-
 );
 
 // ======================
@@ -138,12 +132,14 @@ Route::middleware('auth:sanctum')
         );
 
         Route::post(
-
             '/registrations/{registration}/generate-invoice-link',
-
             [API\RegistrationController::class,
                 'generateInvoiceLink']
+        );
 
+        Route::put(
+            '/change-password',
+            [AuthController::class, 'changePassword']
         );
 
         // ======================

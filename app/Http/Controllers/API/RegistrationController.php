@@ -237,13 +237,10 @@ class RegistrationController extends Controller
             try {
 
                 $child->guardians()->attach(
-
                     $guardian->id,
-
                     [
                         'guardian_role_id' => $roleId,
                     ]
-
                 );
 
             } catch (QueryException $e) {
@@ -251,13 +248,10 @@ class RegistrationController extends Controller
                 $child
                     ->guardians()
                     ->updateExistingPivot(
-
                         $guardian->id,
-
                         [
                             'guardian_role_id' => $roleId,
                         ]
-
                     );
             }
 
@@ -405,11 +399,7 @@ class RegistrationController extends Controller
 
         return response()->json([
 
-            'invoice_link' => env('FRONTEND_URL').
-
-            '/invoice-upload/'.
-
-            $registration->invoice_token,
+            'token' => $registration->invoice_token,
 
         ]);
     }
@@ -460,9 +450,10 @@ class RegistrationController extends Controller
         $registration =
             Registration::with([
 
-                'child',
+                'child.guardians',
                 'program',
                 'payer',
+                'paymentStatus',
 
             ])
                 ->where(
@@ -470,6 +461,27 @@ class RegistrationController extends Controller
                     $token
                 )
                 ->firstOrFail();
+
+        if (
+            $registration->child &&
+            $registration->child->guardians
+        ) {
+
+            $registration
+                ->child
+                ->guardians
+                ->transform(function ($guardian) {
+
+                    $guardian->guardian_role =
+                        GuardianRole::find(
+                            $guardian
+                                ->pivot
+                                ->guardian_role_id
+                        );
+
+                    return $guardian;
+                });
+        }
 
         return response()->json([
 

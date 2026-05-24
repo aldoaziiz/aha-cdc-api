@@ -8,15 +8,10 @@ use Illuminate\Support\Facades\Hash;
 class CreateStaffUserService
 {
     public function execute(
-
         string $name,
-
         string $email,
-
         ?string $phone,
-
         string $role
-
     ) {
 
         return User::create([

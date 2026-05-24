@@ -7,82 +7,35 @@ use App\Models\Guardian;
 use App\Models\User;
 use App\Services\Auth\CreateGuardianUserService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class GuardianController extends Controller
 {
-    private function forbidNonAdmin()
+    private function forbidNonAdmin(): void
     {
-        if (
-            auth()->user()->role !==
-            'admin'
-        ) {
-
-            abort(
-                403,
-                'Forbidden'
-            );
-
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Forbidden');
         }
     }
 
     public function index(Request $request)
     {
-        $query = Guardian::with(
-            'status:id,name'
-        );
-
-        // SEARCH
+        $query = Guardian::with('status:id,name');
 
         if ($request->search) {
-
-            $query->where(
-                function ($q) use ($request) {
-
-                    $q->where(
-                        'name',
-                        'like',
-                        '%'.$request->search.'%'
-                    )
-
-                        ->orWhere(
-                            'phone',
-                            'like',
-                            '%'.$request->search.'%'
-                        );
-
-                }
-            );
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('phone', 'like', '%'.$request->search.'%');
+            });
         }
 
-        // SORTING
-
-        if (
-
-            $request->sort_by &&
-
-            $request->sort_order
-
-        ) {
-
-            $query->orderBy(
-
-                $request->sort_by,
-
-                $request->sort_order
-
-            );
-
+        if ($request->sort_by && $request->sort_order) {
+            $query->orderBy($request->sort_by, $request->sort_order);
         } else {
-
             $query->latest();
-
         }
 
-        // PAGINATION
-
-        return $query->paginate(
-            $request->per_page ?? 10
-        );
+        return $query->paginate($request->per_page ?? 10);
     }
 
     // ======================
@@ -93,109 +46,42 @@ class GuardianController extends Controller
     {
         $this->forbidNonAdmin();
 
-        // ======================
-        // VALIDATION
-        // ======================
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email'],
+            'id_number' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'phone' => 'nullable|string|max:255',
+        ]);
 
-        $validated =
-            $request->validate([
-
-                'name' => 'required|string|max:255',
-
-                'email' => [
-
-                    'required',
-
-                    'email',
-
-                ],
-
-                'id_number' => 'nullable|string|max:255',
-
-                'address' => 'nullable|string',
-
-                'phone' => 'nullable|string|max:255',
-
-            ]);
-
-        // ======================
-        // CHECK EMAIL
-        // ======================
-
-        $emailExists =
-            User::where(
-
-                'email',
-
-                $validated['email']
-
-            )->exists();
+        $emailExists = User::where('email', $validated['email'])->exists();
 
         if ($emailExists) {
-
             return response()->json([
-
                 'message' => 'Email already registered',
-
             ], 422);
-
         }
-
-        // ======================
-        // DEFAULT STATUS
-        // ======================
 
         $validated['status_id'] = 1;
 
-        // ======================
-        // CREATE GUARDIAN
-        // ======================
+        $guardian = Guardian::create($validated);
 
-        $guardian =
-            Guardian::create(
-                $validated
-            );
-
-        // ======================
-        // CREATE USER
-        // ======================
-
-        $userService =
-            new CreateGuardianUserService;
-
-        $user =
-            $userService->execute(
-
-                $guardian->name,
-
-                $guardian->email,
-
-                $guardian->phone
-
-            );
-
-        // ======================
-        // CONNECT USER
-        // ======================
+        $user = (new CreateGuardianUserService)->execute(
+            $guardian->name,
+            $guardian->email,
+            $guardian->phone
+        );
 
         $guardian->update([
-
             'user_id' => $user->id,
-
         ]);
 
         return response()->json(
-
             $guardian->load([
-
                 'status:id,name',
-
                 'role:id,name',
-
             ]),
-
             201
-
         );
     }
 
@@ -205,66 +91,68 @@ class GuardianController extends Controller
 
     public function show($id)
     {
-        $guardian =
-            Guardian::with([
-
-                'status',
-
-                'children:id,name',
-
-            ])->find($id);
+        $guardian = Guardian::with([
+            'status',
+            'children:id,name',
+        ])->find($id);
 
         if (! $guardian) {
-
             return response()->json([
-
                 'message' => 'Not found',
-
             ], 404);
-
         }
 
-        return response()->json(
-            $guardian
-        );
+        return response()->json($guardian);
     }
 
     // ======================
     // UPDATE
     // ======================
 
-    public function update(
-        Request $request,
-        $id
-    ) {
+    public function update(Request $request, $id)
+    {
         $this->forbidNonAdmin();
 
-        $guardian =
-            Guardian::with([
-
-                'status',
-
-                'role',
-
-            ])->find($id);
+        $guardian = Guardian::with([
+            'status',
+            'role',
+        ])->find($id);
 
         if (! $guardian) {
-
             return response()->json([
-
                 'message' => 'Not found',
-
             ], 404);
-
         }
 
-        $guardian->update(
-            $request->all()
-        );
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
 
-        return response()->json(
-            $guardian
-        );
+            'email' => [
+                'sometimes',
+                'email',
+                Rule::unique('users', 'email')
+                    ->ignore($guardian->user_id),
+            ],
+
+            'phone' => 'nullable|string|max:255',
+
+            'address' => 'nullable|string',
+        ]);
+
+        $guardian->update($validated);
+
+        if ($guardian->user_id) {
+            $user = User::find($guardian->user_id);
+
+            if ($user) {
+                $user->update([
+                    'name' => $guardian->name,
+                    'email' => $guardian->email,
+                ]);
+            }
+        }
+
+        return response()->json($guardian);
     }
 
     // ======================
@@ -275,31 +163,21 @@ class GuardianController extends Controller
     {
         $this->forbidNonAdmin();
 
-        $guardian =
-            Guardian::with([
-
-                'status',
-
-                'role',
-
-            ])->find($id);
+        $guardian = Guardian::with([
+            'status',
+            'role',
+        ])->find($id);
 
         if (! $guardian) {
-
             return response()->json([
-
                 'message' => 'Not found',
-
             ], 404);
-
         }
 
         $guardian->delete($id);
 
         return response()->json([
-
             'message' => 'Deleted',
-
         ]);
     }
 }

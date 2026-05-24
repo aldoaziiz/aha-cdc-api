@@ -8,6 +8,7 @@ use App\Models\StaffRole;
 use App\Models\User;
 use App\Services\Auth\CreateStaffUserService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class StaffController extends Controller
 {
@@ -149,15 +150,10 @@ class StaffController extends Controller
 
         $user =
             $userService->execute(
-
                 $staff->name,
-
                 $staff->email,
-
                 $staff->phone,
-
                 $role
-
             );
 
         // ======================
@@ -217,7 +213,12 @@ class StaffController extends Controller
 
             'name' => 'sometimes|string|max:255',
 
-            'email' => 'sometimes|email|max:255',
+            'email' => [
+                'sometimes',
+                'email',
+                Rule::unique('users', 'email')
+                    ->ignore($staff->user_id),
+            ],
 
             'phone' => 'nullable|string|max:255',
 
@@ -230,6 +231,17 @@ class StaffController extends Controller
         ]);
 
         $staff->update($validated);
+
+        if ($staff->user_id) {
+            $user = User::find($staff->user_id);
+
+            if ($user) {
+                $user->update([
+                    'name' => $staff->name,
+                    'email' => $staff->email,
+                ]);
+            }
+        }
 
         return response()->json([
 
