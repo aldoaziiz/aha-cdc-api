@@ -17,12 +17,20 @@ Route::get('/test', function () {
 
 });
 
-Route::get('/db-test', function () {
-
-    DB::connection()->getPdo();
+Route::get('/ping', function () {
 
     return response()->json([
-        'success' => true,
+        'ok' => true,
+    ]);
+
+});
+
+Route::get('/db-ping', function () {
+
+    DB::select('SELECT 1');
+
+    return response()->json([
+        'ok' => true,
     ]);
 
 });
