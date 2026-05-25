@@ -8,21 +8,29 @@ use Illuminate\Http\Request;
 
 class RoomController extends Controller
 {
-    public function index(Request $request)
+    // public function index(Request $request)
+    // {
+    //     $query = Room::with([
+    //         'status:id,name',
+    //     ]);
+
+    //     // SEARCH
+    //     if ($request->search) {
+    //         $query->where(function ($q) use ($request) {
+    //             $q->where('name', 'like', '%'.$request->search.'%')
+    //                 ->orWhere('description', 'like', '%'.$request->search.'%');
+    //         });
+    //     }
+
+    //     return $query->paginate($request->per_page ?? 10);
+    // }
+
+    public function index()
     {
-        $query = Room::with([
-            'status:id,name',
-        ]);
-
-        // SEARCH
-        if ($request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%'.$request->search.'%')
-                    ->orWhere('description', 'like', '%'.$request->search.'%');
-            });
-        }
-
-        return $query->paginate($request->per_page ?? 10);
+        return Room::select(
+            'id',
+            'name'
+        )->get();
     }
 
     /**
