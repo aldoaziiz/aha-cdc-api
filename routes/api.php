@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API;
 use App\Http\Controllers\API\AuthController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 // ======================
@@ -12,6 +13,16 @@ Route::get('/test', function () {
 
     return response()->json([
         'message' => 'API jalan bro',
+    ]);
+
+});
+
+Route::get('/db-test', function () {
+
+    DB::connection()->getPdo();
+
+    return response()->json([
+        'success' => true,
     ]);
 
 });
