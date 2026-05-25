@@ -60,6 +60,11 @@ Route::get(
 // PUBLIC LOOKUP
 
 Route::get(
+    '/master-data',
+    [API\MasterDataController::class, 'index']
+);
+
+Route::get(
     '/guardian-roles',
     [API\GuardianRoleController::class,
         'index']
