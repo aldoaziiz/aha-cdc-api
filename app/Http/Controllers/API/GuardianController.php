@@ -137,6 +137,7 @@ class GuardianController extends Controller
             'phone' => 'nullable|string|max:255',
 
             'address' => 'nullable|string',
+            'status_id' => 'sometimes|integer|exists:statuses,id',
         ]);
 
         $guardian->update($validated);
