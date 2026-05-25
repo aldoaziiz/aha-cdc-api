@@ -32,7 +32,7 @@ Route::post(
 Route::post(
     '/registrations',
     [API\RegistrationController::class, 'store']
-);
+)->middleware('throttle:10,1');
 
 Route::get(
     '/public-registration/children',
@@ -102,7 +102,7 @@ Route::post(
     '/invoice-upload/{token}',
     [API\RegistrationController::class,
         'uploadReceiptByToken']
-);
+)->middleware('throttle:10,1');
 
 Route::get(
     '/invoice-upload/{token}',
