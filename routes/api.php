@@ -302,6 +302,12 @@ Route::middleware('auth:sanctum')
             [API\RegistrationController::class, 'markPaid']
         );
 
+        Route::get(
+            '/registration-edit-master-data/{id}',
+            [API\RegistrationController::class,
+                'editMasterData']
+        );
+
         // ======================
         // ACTIVITY
         // ======================

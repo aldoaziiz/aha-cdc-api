@@ -7,6 +7,8 @@ use App\Http\Resources\RegistrationResource;
 use App\Models\Child;
 use App\Models\Guardian;
 use App\Models\GuardianRole;
+use App\Models\Payer;
+use App\Models\Program;
 use App\Models\Registration;
 use App\Models\User;
 use App\Services\Auth\CreateGuardianUserService;
@@ -521,6 +523,35 @@ class RegistrationController extends Controller
         return response()->json([
 
             'data' => $guardians,
+
+        ]);
+    }
+
+    public function editMasterData($id)
+    {
+        $registration = Registration::with([
+
+            'child',
+
+            'paymentStatus',
+
+            'program',
+
+            'payer',
+
+        ])->findOrFail($id);
+
+        $programs = Program::all();
+
+        $payers = Payer::all();
+
+        return response()->json([
+
+            'registration' => $registration,
+
+            'programs' => $programs,
+
+            'payers' => $payers,
 
         ]);
     }
