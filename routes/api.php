@@ -115,6 +115,12 @@ Route::get(
         'invoiceByToken']
 );
 
+// PUBLIC REGISTRATION
+Route::post(
+    '/public-registrations',
+    [API\PublicRegistrationController::class, 'store']
+)->middleware('throttle:10,1');
+
 // ======================
 // PROTECTED
 // ======================
