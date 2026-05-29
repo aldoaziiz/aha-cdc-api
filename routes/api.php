@@ -46,25 +46,6 @@ Route::post(
     [AuthController::class, 'login']
 );
 
-// PUBLIC REGISTRATION
-
-Route::post(
-    '/registrations',
-    [API\RegistrationController::class, 'store']
-)->middleware('throttle:10,1');
-
-Route::get(
-    '/public-registration/children',
-    [API\RegistrationController::class,
-        'publicChildren']
-);
-
-Route::get(
-    '/public-registration/guardians',
-    [API\RegistrationController::class,
-        'publicGuardians']
-);
-
 // PUBLIC LOOKUP
 
 Route::get(
@@ -269,9 +250,7 @@ Route::middleware('auth:sanctum')
         Route::apiResource(
             'registrations',
             API\RegistrationController::class
-        )->except([
-            'store',
-        ]);
+        );
 
         Route::apiResource(
             'therapy-sessions',
