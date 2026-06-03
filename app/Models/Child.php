@@ -12,7 +12,6 @@ class Child extends Model
         'nickname',
         'birth_date',
         'gender',
-        'phone',
         'address',
         'program_id',
         'status_id',

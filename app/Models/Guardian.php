@@ -12,6 +12,8 @@ class Guardian extends Model
         'address',
         'email',
         'phone',
+        'occupation',
+        'social_media',
         'status_id',
         'user_id',
     ];

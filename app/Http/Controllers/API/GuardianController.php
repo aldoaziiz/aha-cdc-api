@@ -52,6 +52,8 @@ class GuardianController extends Controller
             'id_number' => 'nullable|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:255',
+            'occupation' => 'nullable|string|max:255',
+            'social_media' => 'nullable|string|max:255',
         ]);
 
         $emailExists = User::where('email', $validated['email'])->exists();
@@ -135,7 +137,8 @@ class GuardianController extends Controller
             ],
 
             'phone' => 'nullable|string|max:255',
-
+            'occupation' => 'nullable|string|max:255',
+            'social_media' => 'nullable|string|max:255',
             'address' => 'nullable|string',
             'status_id' => 'sometimes|integer|exists:statuses,id',
         ]);

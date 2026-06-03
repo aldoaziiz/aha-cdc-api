@@ -202,6 +202,12 @@ class RegistrationController extends Controller
 
                         'phone' => $request->guardian['phone'],
 
+                        'occupation' => $request->guardian['occupation']
+                            ?? null,
+
+                        'social_media' => $request->guardian['social_media']
+                            ?? null,
+
                         'address' => $request->guardian['address'],
 
                     ]);
@@ -300,6 +306,9 @@ class RegistrationController extends Controller
                         ?? null,
 
                     'payer_id' => $request->registration['payer_id']
+                        ?? null,
+
+                    'clinic_id' => $request->registration['clinic_id']
                         ?? null,
 
                 ]);

@@ -18,4 +18,11 @@ class Program extends Model
     {
         return $this->hasMany(Child::class);
     }
+
+    public function clinic()
+    {
+        return $this->belongsTo(
+            Clinic::class
+        );
+    }
 }

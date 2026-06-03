@@ -160,6 +160,9 @@ class PublicRegistrationController extends Controller
                     'payer_id' => $request->registration['payer_id']
                         ?? null,
 
+                    'clinic_id' => $request->registration['clinic_id']
+                        ?? null,
+
                 ]);
 
             return response()->json([

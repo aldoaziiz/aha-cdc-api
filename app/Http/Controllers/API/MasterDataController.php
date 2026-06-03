@@ -25,25 +25,25 @@ class MasterDataController extends Controller
             'clinics' => Clinic::orderBy('name')
                 ->get(),
 
-            'guardian_roles' => GuardianRole::orderBy('id')
+            'guardian_roles' => GuardianRole::orderBy('name')
                 ->get(),
 
             'payers' => Payer::orderBy('name')
                 ->get(),
 
-            'programs' => Program::orderBy('id', 'asc')
+            'programs' => Program::orderBy('name', 'asc')
                 ->get(),
 
             'schools' => School::orderBy('name', 'asc')
                 ->get(),
 
-            'school_classes' => SchoolClass::orderBy('id', 'asc')
+            'school_classes' => SchoolClass::orderBy('name', 'asc')
                 ->get(),
 
-            'school_educations' => SchoolEducation::orderBy('id')
+            'school_educations' => SchoolEducation::orderBy('name')
                 ->get(),
 
-            'staff_roles' => StaffRole::orderBy('id', 'asc')
+            'staff_roles' => StaffRole::orderBy('name', 'asc')
                 ->get(),
 
         ]);

@@ -10,4 +10,11 @@ class Clinic extends Model
         'name',
         'address',
     ];
+
+    public function programs()
+    {
+        return $this->hasMany(
+            Program::class
+        );
+    }
 }

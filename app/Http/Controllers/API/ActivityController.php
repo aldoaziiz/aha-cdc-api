@@ -34,7 +34,6 @@ class ActivityController extends Controller
             'therapySession.registration.child',
             'therapySession.registration.program',
             'therapySession.therapist',
-            'therapySession.room',
         ])
             ->join(
                 'therapy_sessions',
@@ -235,7 +234,6 @@ class ActivityController extends Controller
                 'therapySession.registration.child',
                 'therapySession.registration.program',
                 'therapySession.therapist',
-                'therapySession.room',
             ]),
         ]);
     }
@@ -312,17 +310,10 @@ class ActivityController extends Controller
         return response()->json([
 
             'data' => $activity->load([
-
                 'photos',
-
                 'therapySession.registration.child',
-
                 'therapySession.registration.program',
-
                 'therapySession.therapist',
-
-                'therapySession.room',
-
             ]),
 
         ]);
@@ -457,8 +448,6 @@ class ActivityController extends Controller
                 'therapySession.registration.program',
 
                 'therapySession.therapist',
-
-                'therapySession.room',
 
             ]),
 

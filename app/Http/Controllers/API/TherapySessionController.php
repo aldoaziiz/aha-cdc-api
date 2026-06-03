@@ -40,7 +40,6 @@ class TherapySessionController extends Controller
 
         $query = TherapySession::with([
             'therapist.staffRole',
-            'room',
             'registration.child',
             'registration.program',
             'activity.photos',
@@ -151,8 +150,6 @@ class TherapySessionController extends Controller
         $request->validate([
             'registration_id' => 'required|exists:registrations,id',
             'therapist_id' => 'required|exists:staff,id',
-            'room_id' => 'nullable|exists:rooms,id',
-
             'therapy_date' => 'required|date',
             'start_time' => 'required',
             'end_time' => 'required',
@@ -182,32 +179,10 @@ class TherapySessionController extends Controller
             return response()->json(['message' => 'Therapist is already booked for the selected time'], 422);
         }
 
-        // validasi ruangan sudah ada jadwal di waktu yang sama
-        if ($request->room_id) {
-
-            $roomConflict = TherapySession::where('room_id', $request->room_id)
-                ->where('therapy_date', $request->therapy_date)
-                ->where(function ($q) use ($request) {
-
-                    $q->where('start_time', '<', $request->end_time)
-                        ->where('end_time', '>', $request->start_time);
-                })
-                ->exists();
-
-            if ($roomConflict) {
-
-                return response()->json([
-                    'message' => 'Room already used at this time.',
-                ], 422);
-            }
-        }
-
         // buat sesi terapi
         $session = TherapySession::create([
             'registration_id' => $request->registration_id,
             'therapist_id' => $request->therapist_id,
-            'room_id' => $request->room_id,
-
             'therapy_date' => $request->therapy_date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
