@@ -25,4 +25,12 @@ class Program extends Model
             Clinic::class
         );
     }
+
+    public function category()
+    {
+        return $this->belongsTo(
+            ProgramCategory::class,
+            'program_category_id'
+        );
+    }
 }

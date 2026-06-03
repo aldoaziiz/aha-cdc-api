@@ -8,6 +8,7 @@ use App\Models\Clinic;
 use App\Models\GuardianRole;
 use App\Models\Payer;
 use App\Models\Program;
+use App\Models\ProgramCategory;
 use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\SchoolEducation;
@@ -31,7 +32,10 @@ class MasterDataController extends Controller
             'payers' => Payer::orderBy('name')
                 ->get(),
 
-            'programs' => Program::orderBy('name', 'asc')
+            'program_categories' => ProgramCategory::orderBy('name', 'asc')
+                ->get(),
+
+            'programs' => Program::orderBy('order_number', 'asc')
                 ->get(),
 
             'schools' => School::orderBy('name', 'asc')
