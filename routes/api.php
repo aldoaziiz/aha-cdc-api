@@ -1,7 +1,27 @@
 <?php
 
-use App\Http\Controllers\API;
+use App\Http\Controllers\API\ActivityController;
+use App\Http\Controllers\API\ActivityPhotoController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\ChildController;
+use App\Http\Controllers\API\ChildGuardianController;
+use App\Http\Controllers\API\CityController;
+use App\Http\Controllers\API\ClinicController;
+use App\Http\Controllers\API\GuardianController;
+use App\Http\Controllers\API\GuardianRoleController;
+use App\Http\Controllers\API\MasterDataController;
+use App\Http\Controllers\API\PayerController;
+use App\Http\Controllers\API\ProgramController;
+use App\Http\Controllers\API\PublicRegistrationController;
+use App\Http\Controllers\API\RegistrationController;
+use App\Http\Controllers\API\RoomController;
+use App\Http\Controllers\API\SchoolClassController;
+use App\Http\Controllers\API\SchoolController;
+use App\Http\Controllers\API\SchoolEducationController;
+use App\Http\Controllers\API\StaffController;
+use App\Http\Controllers\API\StaffRoleController;
+use App\Http\Controllers\API\TherapySessionController;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -50,54 +70,54 @@ Route::post(
 
 Route::get(
     '/master-data',
-    [API\MasterDataController::class, 'index']
+    [MasterDataController::class, 'index']
 );
 
 Route::get(
     '/guardian-roles',
-    [API\GuardianRoleController::class,
+    [GuardianRoleController::class,
         'index']
 );
 
 Route::get(
     '/programs',
-    [API\ProgramController::class,
+    [ProgramController::class,
         'index']
 );
 
 Route::get(
     '/payers',
-    [API\PayerController::class,
+    [PayerController::class,
         'index']
 );
 
 Route::get(
     '/cities',
-    [API\CityController::class,
+    [CityController::class,
         'index']
 );
 
 Route::get(
     '/schools',
-    [API\SchoolController::class,
+    [SchoolController::class,
         'index']
 );
 
 Route::get(
     '/school-classes',
-    [API\SchoolClassController::class,
+    [SchoolClassController::class,
         'index']
 );
 
 Route::get(
     '/school-educations',
-    [API\SchoolEducationController::class,
+    [SchoolEducationController::class,
         'index']
 );
 
 Route::get(
     '/rooms',
-    [API\RoomController::class,
+    [RoomController::class,
         'index']
 );
 
@@ -105,20 +125,20 @@ Route::get(
 
 Route::post(
     '/invoice-upload/{token}',
-    [API\RegistrationController::class,
+    [RegistrationController::class,
         'uploadReceiptByToken']
 )->middleware('throttle:10,1');
 
 Route::get(
     '/invoice-upload/{token}',
-    [API\RegistrationController::class,
+    [RegistrationController::class,
         'invoiceByToken']
 );
 
 // PUBLIC REGISTRATION
 Route::post(
     '/public-registrations',
-    [API\PublicRegistrationController::class, 'store']
+    [PublicRegistrationController::class, 'store']
 )->middleware('throttle:10,1');
 
 // ======================
@@ -144,7 +164,7 @@ Route::middleware('auth:sanctum')
 
         Route::post(
             '/registrations/{registration}/generate-invoice-link',
-            [API\RegistrationController::class,
+            [RegistrationController::class,
                 'generateInvoiceLink']
         );
 
@@ -159,95 +179,78 @@ Route::middleware('auth:sanctum')
 
         Route::apiResource(
             'children',
-            API\ChildController::class
+            ChildController::class
         );
 
         Route::apiResource(
             'guardians',
-            API\GuardianController::class
+            GuardianController::class
         );
 
         Route::apiResource(
             'staff',
-            API\StaffController::class
+            StaffController::class
         );
 
         Route::apiResource(
             'staff-roles',
-            API\StaffRoleController::class
+            StaffRoleController::class
         );
 
         Route::apiResource(
             'schools',
-            API\SchoolController::class
-        )->except([
-            'index',
-            'show',
-        ]);
+            SchoolController::class
+        );
 
         Route::apiResource(
             'school-classes',
-            API\SchoolClassController::class
-        )->except([
-            'index',
-            'show',
-        ]);
+            SchoolClassController::class
+        );
 
         Route::apiResource(
             'school-educations',
-            API\SchoolEducationController::class
-        )->except([
-            'index',
-            'show',
-        ]);
+            SchoolEducationController::class
+        );
 
         Route::apiResource(
             'clinics',
-            API\ClinicController::class
-        )->except([
-            'index',
-            'show',
-        ]);
+            ClinicController::class
+        );
 
         Route::apiResource(
             'payers',
-            API\PayerController::class
-        )->except([
-            'index',
-            'show',
-        ]);
+            PayerController::class
+        );
 
         Route::apiResource(
             'programs',
-            API\ProgramController::class
-        )->except([
-            'index',
-            'show',
-        ]);
+            ProgramController::class
+        );
+
+        Route::patch(
+            'programs/{program}/activate',
+            [ProgramController::class, 'activate']
+        );
+
+        Route::patch(
+            'programs/{program}/deactivate',
+            [ProgramController::class, 'deactivate']
+        );
 
         Route::apiResource(
             'guardian-roles',
-            API\GuardianRoleController::class
-        )->except([
-            'index',
-            'show',
-        ]);
+            GuardianRoleController::class
+        );
 
         Route::apiResource(
             'cities',
-            API\CityController::class
-        )->except([
-            'index',
-            'show',
-        ]);
+            CityController::class
+        );
 
         Route::apiResource(
             'rooms',
-            API\RoomController::class
-        )->except([
-            'index',
-            'show',
-        ]);
+            RoomController::class
+        );
 
         // ======================
         // TRANSACTIONS
@@ -255,17 +258,17 @@ Route::middleware('auth:sanctum')
 
         Route::apiResource(
             'registrations',
-            API\RegistrationController::class
+            RegistrationController::class
         );
 
         Route::apiResource(
             'therapy-sessions',
-            API\TherapySessionController::class
+            TherapySessionController::class
         );
 
         Route::apiResource(
             'activities',
-            API\ActivityController::class
+            ActivityController::class
         );
 
         // ======================
@@ -274,22 +277,22 @@ Route::middleware('auth:sanctum')
 
         Route::get(
             '/registrations/{id}',
-            [API\RegistrationController::class, 'show']
+            [RegistrationController::class, 'show']
         );
 
         Route::post(
             '/registrations/{id}/upload-receipt',
-            [API\RegistrationController::class, 'uploadReceipt']
+            [RegistrationController::class, 'uploadReceipt']
         );
 
         Route::put(
             '/registrations/{id}/mark-paid',
-            [API\RegistrationController::class, 'markPaid']
+            [RegistrationController::class, 'markPaid']
         );
 
         Route::get(
             '/registration-edit-master-data/{id}',
-            [API\RegistrationController::class,
+            [RegistrationController::class,
                 'editMasterData']
         );
 
@@ -299,12 +302,12 @@ Route::middleware('auth:sanctum')
 
         Route::delete(
             '/activity-photos/{activityPhoto}',
-            [API\ActivityPhotoController::class, 'destroy']
+            [ActivityPhotoController::class, 'destroy']
         );
 
         Route::delete(
             '/activities/{activity}/video',
-            [API\ActivityController::class, 'deleteVideo']
+            [ActivityController::class, 'deleteVideo']
         );
 
         // ======================
@@ -313,12 +316,12 @@ Route::middleware('auth:sanctum')
 
         Route::post(
             '/children/{child}/guardians',
-            [API\ChildGuardianController::class, 'store']
+            [ChildGuardianController::class, 'store']
         );
 
         Route::delete(
             '/children/{child}/guardians/{guardian}',
-            [API\ChildGuardianController::class, 'destroy']
+            [ChildGuardianController::class, 'destroy']
         );
 
     });

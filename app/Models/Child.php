@@ -13,7 +13,6 @@ class Child extends Model
         'birth_date',
         'gender',
         'address',
-        'program_id',
         'status_id',
         'birthplace_id',
         'hometown_id',
@@ -29,11 +28,6 @@ class Child extends Model
                 $child->status_id = 1;
             }
         });
-    }
-
-    public function program()
-    {
-        return $this->belongsTo(Program::class);
     }
 
     public function status()

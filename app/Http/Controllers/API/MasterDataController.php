@@ -13,6 +13,7 @@ use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\SchoolEducation;
 use App\Models\StaffRole;
+use App\Models\Status;
 
 class MasterDataController extends Controller
 {
@@ -48,6 +49,9 @@ class MasterDataController extends Controller
                 ->get(),
 
             'staff_roles' => StaffRole::orderBy('name', 'asc')
+                ->get(),
+
+            'statuses' => Status::orderBy('name', 'asc')
                 ->get(),
 
         ]);

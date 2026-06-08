@@ -12,12 +12,11 @@ class Program extends Model
         'name',
         'description',
         'price',
+        'clinic_id',
+        'program_category_id',
+        'order_number',
+        'status_id',
     ];
-
-    public function children()
-    {
-        return $this->hasMany(Child::class);
-    }
 
     public function clinic()
     {
@@ -32,5 +31,10 @@ class Program extends Model
             ProgramCategory::class,
             'program_category_id'
         );
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(Status::class);
     }
 }
