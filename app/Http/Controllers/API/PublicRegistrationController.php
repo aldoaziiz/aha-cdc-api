@@ -5,7 +5,9 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Child;
 use App\Models\Guardian;
+use App\Models\Program;
 use App\Models\Registration;
+use App\Models\RegistrationProgram;
 use App\Models\User;
 use App\Services\Auth\CreateGuardianUserService;
 use Illuminate\Http\Request;
@@ -32,7 +34,7 @@ class PublicRegistrationController extends Controller
                 'guardian.phone' => 'required|string|max:255',
                 'guardian.guardian_role_id' => 'required|integer',
 
-                'registration.program_id' => 'required',
+                'registration.program_ids' => 'required|array|min:1',
                 'registration.payer_id' => 'required',
 
             ]);
@@ -154,7 +156,8 @@ class PublicRegistrationController extends Controller
                     'complaint' => $request->registration['complaint']
                         ?? null,
 
-                    'program_id' => $request->registration['program_id']
+                    'program_id' => $request->registration['program_ids'][0]
+                        ?? $request->registration['program_id']
                         ?? null,
 
                     'payer_id' => $request->registration['payer_id']
@@ -164,6 +167,64 @@ class PublicRegistrationController extends Controller
                         ?? null,
 
                 ]);
+
+            // ======================
+            // 6. CREATE
+            // REGISTRATION PROGRAMS
+            // ======================
+
+            if (
+                ! empty(
+                    $request->registration['program_ids']
+                )
+            ) {
+
+                foreach (
+                    $request->registration['program_ids'] as $programId
+                ) {
+
+                    $program =
+                        Program::find($programId);
+
+                    if (! $program) {
+                        continue;
+                    }
+
+                    RegistrationProgram::create([
+
+                        'registration_id' => $registration->id,
+
+                        'program_id' => $program->id,
+
+                        'price' => $program->price,
+
+                    ]);
+                }
+
+            } elseif (
+                ! empty(
+                    $request->registration['program_id']
+                )
+            ) {
+
+                $program =
+                    Program::find(
+                        $request->registration['program_id']
+                    );
+
+                if ($program) {
+
+                    RegistrationProgram::create([
+
+                        'registration_id' => $registration->id,
+
+                        'program_id' => $program->id,
+
+                        'price' => $program->price,
+
+                    ]);
+                }
+            }
 
             return response()->json([
 

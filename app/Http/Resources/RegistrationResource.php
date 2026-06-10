@@ -39,11 +39,19 @@ class RegistrationResource extends JsonResource
                 }),
             ],
 
-            'program' => $this->program ? [
-                'id' => $this->program->id,
-                'name' => $this->program->name,
-                'price' => $this->program->price ?? 0,
+            'clinic' => $this->clinic ? [
+                'id' => $this->clinic->id,
+                'name' => $this->clinic->name,
             ] : null,
+
+            'programs' => $this->programs->map(function ($program) {
+
+                return [
+                    'id' => $program->id,
+                    'name' => $program->name,
+                    'price' => $program->pivot->price,
+                ];
+            }),
 
             'payer' => $this->payer ? [
                 'id' => $this->payer->id,

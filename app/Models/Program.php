@@ -37,4 +37,19 @@ class Program extends Model
     {
         return $this->belongsTo(Status::class);
     }
+
+    public function registrationPrograms()
+    {
+        return $this->hasMany(
+            RegistrationProgram::class
+        );
+    }
+
+    public function registrations()
+    {
+        return $this->belongsToMany(
+            Registration::class,
+            'registration_programs'
+        )->withPivot('price');
+    }
 }

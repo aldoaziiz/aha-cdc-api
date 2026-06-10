@@ -5,12 +5,16 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RegistrationResource;
 use App\Models\Child;
+use App\Models\Clinic;
 use App\Models\Guardian;
 use App\Models\GuardianRole;
 use App\Models\Payer;
 use App\Models\Program;
+use App\Models\ProgramCategory;
 use App\Models\Registration;
+use App\Models\RegistrationProgram;
 use App\Models\User;
+
 use App\Services\Auth\CreateGuardianUserService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -51,9 +55,9 @@ class RegistrationController extends Controller
 
     public function index(Request $request)
     {
-        $query = Registration::with([
+        $query = Registration::orderBy('created_at', 'desc')->with([
             'child.guardians',
-            'program',
+            'programs',
             'paymentStatus',
         ]);
 
@@ -313,6 +317,64 @@ class RegistrationController extends Controller
 
                 ]);
 
+            // ======================
+            // 6. CREATE
+            // REGISTRATION PROGRAMS
+            // ======================
+
+            if (
+                ! empty(
+                    $request->registration['program_ids']
+                )
+            ) {
+
+                foreach (
+                    $request->registration['program_ids'] as $programId
+                ) {
+
+                    $program =
+                        Program::find($programId);
+
+                    if (! $program) {
+                        continue;
+                    }
+
+                    RegistrationProgram::create([
+
+                        'registration_id' => $registration->id,
+
+                        'program_id' => $program->id,
+
+                        'price' => $program->price,
+
+                    ]);
+                }
+
+            } elseif (
+                ! empty(
+                    $request->registration['program_id']
+                )
+            ) {
+
+                $program =
+                    Program::find(
+                        $request->registration['program_id']
+                    );
+
+                if ($program) {
+
+                    RegistrationProgram::create([
+
+                        'registration_id' => $registration->id,
+
+                        'program_id' => $program->id,
+
+                        'price' => $program->price,
+
+                    ]);
+                }
+            }
+
             return response()->json([
 
                 'message' => 'Registration created successfully',
@@ -327,7 +389,8 @@ class RegistrationController extends Controller
     {
         $data = Registration::with([
             'child.guardians',
-            'program',
+            'clinic',
+            'programs',
             'paymentStatus',
             'payer',
         ])->findOrFail($id);
@@ -339,20 +402,85 @@ class RegistrationController extends Controller
     {
         $this->forbidNonAdmin();
 
-        $registration = Registration::findOrFail($id);
+        return DB::transaction(function () use ($request, $id) {
 
-        $validated = $request->validate([
-            'program_id' => 'nullable|exists:programs,id',
-            'payer_id' => 'nullable|exists:payers,id',
-            'complaint' => 'nullable|string',
-        ]);
+            $registration = Registration::findOrFail($id);
 
-        $registration->update($validated);
+            // ======================
+            // LOCK IF NOT UNPAID
+            // ======================
 
-        return response()->json([
-            'message' => 'Registration updated successfully',
-            'data' => $registration->load(['program', 'payer']),
-        ]);
+            if ($registration->payment_status_id != 1) {
+
+                return response()->json([
+                    'message' => 'This registration can no longer be edited.',
+                ], 422);
+
+            }
+
+            // ======================
+            // VALIDATION
+            // ======================
+
+            $validated = $request->validate([
+                'clinic_id' => 'required|exists:clinics,id',
+                'program_category_id' => 'required|exists:program_categories,id',
+                'program_ids' => 'required|array|min:1',
+                'program_ids.*' => 'exists:programs,id',
+
+                'payer_id' => 'nullable|exists:payers,id',
+
+                'complaint' => 'nullable|string',
+            ]);
+
+            // ======================
+            // UPDATE REGISTRATION
+            // ======================
+
+            $registration->update([
+                'clinic_id' => $validated['clinic_id'],
+                'program_id' => $validated['program_ids'][0],
+
+                'payer_id' => $validated['payer_id'] ?? null,
+
+                'complaint' => $validated['complaint'] ?? null,
+
+            ]);
+
+            // ======================
+            // REPLACE PROGRAMS
+            // ======================
+
+            $registration
+                ->registrationPrograms()
+                ->delete();
+
+            foreach ($validated['program_ids'] as $programId) {
+
+                $program = Program::find($programId);
+
+                RegistrationProgram::create([
+
+                    'registration_id' => $registration->id,
+
+                    'program_id' => $program->id,
+
+                    'price' => $program->price,
+
+                ]);
+            }
+
+            return response()->json([
+
+                'message' => 'Registration updated successfully',
+
+                'data' => $registration->load([
+                    'programs',
+                    'payer',
+                    'paymentStatus',
+                ]),
+            ]);
+        });
     }
 
     public function uploadReceipt(Request $request, $id)
@@ -544,9 +672,11 @@ class RegistrationController extends Controller
 
             'paymentStatus',
 
-            'program',
+            'programs.category',
 
             'payer',
+
+            'clinic',
 
         ])->findOrFail($id);
 
@@ -554,13 +684,29 @@ class RegistrationController extends Controller
 
         $payers = Payer::all();
 
+        $clinics = Clinic::all();
+
+        $programCategories = ProgramCategory::all();
+
         return response()->json([
 
-            'registration' => $registration,
+            'registration' => [
+
+                ...$registration->toArray(),
+
+                'program_category' => optional(
+                    $registration->programs->first()
+                )->category,
+
+            ],
 
             'programs' => $programs,
 
             'payers' => $payers,
+
+            'clinics' => $clinics,
+
+            'program_categories' => $programCategories,
 
         ]);
     }
