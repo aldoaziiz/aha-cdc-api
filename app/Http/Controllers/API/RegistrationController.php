@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RegistrationResource;
+use App\Models\Billing;
+use App\Models\BillingItem;
 use App\Models\Child;
 use App\Models\Clinic;
 use App\Models\Guardian;
@@ -14,12 +16,10 @@ use App\Models\ProgramCategory;
 use App\Models\Registration;
 use App\Models\RegistrationProgram;
 use App\Models\User;
-
 use App\Services\Auth\CreateGuardianUserService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class RegistrationController extends Controller
 {
@@ -58,7 +58,7 @@ class RegistrationController extends Controller
         $query = Registration::orderBy('created_at', 'desc')->with([
             'child.guardians',
             'programs',
-            'paymentStatus',
+            'billing.paymentStatus',
         ]);
 
         // SEARCH
@@ -391,7 +391,7 @@ class RegistrationController extends Controller
             'child.guardians',
             'clinic',
             'programs',
-            'paymentStatus',
+            'billing.paymentStatus',
             'payer',
         ])->findOrFail($id);
 
@@ -404,13 +404,14 @@ class RegistrationController extends Controller
 
         return DB::transaction(function () use ($request, $id) {
 
-            $registration = Registration::findOrFail($id);
+            $registration = Registration::with('billing')
+                ->findOrFail($id);
 
             // ======================
             // LOCK IF NOT UNPAID
             // ======================
 
-            if ($registration->payment_status_id != 1) {
+            if ($registration->billing) {
 
                 return response()->json([
                     'message' => 'This registration can no longer be edited.',
@@ -477,156 +478,10 @@ class RegistrationController extends Controller
                 'data' => $registration->load([
                     'programs',
                     'payer',
-                    'paymentStatus',
+                    'billing.paymentStatus',
                 ]),
             ]);
         });
-    }
-
-    public function uploadReceipt(Request $request, $id)
-    {
-        $this->forbidTherapist();
-
-        $request->validate([
-            'file' => 'required|image|max:2048', // max 2MB (backup dari server)
-        ]);
-
-        $registration = Registration::findOrFail($id);
-
-        // simpan file
-        $path = $request->file('file')->store('receipts', 'public');
-
-        // simpan ke DB
-        $registration->update([
-            'payment_receipt' => $path,
-            'payment_status_id' => 2,
-        ]);
-
-        return response()->json([
-            'message' => 'Upload success',
-            'path' => $path,
-        ]);
-    }
-
-    public function markPaid($id)
-    {
-        $this->forbidNonAdmin();
-
-        $registration = Registration::findOrFail($id);
-
-        $registration->update([
-            'payment_status_id' => 3,
-        ]);
-
-        return response()->json([
-            'message' => 'Marked as paid',
-        ]);
-    }
-
-    public function generateInvoiceLink(Registration $registration)
-    {
-        if (
-            ! $registration->invoice_token
-        ) {
-
-            $registration->update([
-
-                'invoice_token' => Str::uuid(),
-
-            ]);
-        }
-
-        return response()->json([
-
-            'token' => $registration->invoice_token,
-
-        ]);
-    }
-
-    public function uploadReceiptByToken(
-        Request $request,
-        $token
-    ) {
-        $registration =
-            Registration::where(
-                'invoice_token',
-                $token
-            )->firstOrFail();
-
-        $request->validate([
-
-            'receipt' => [
-                'required',
-                'image',
-                'max:5120',
-            ],
-
-        ]);
-
-        $receiptPath =
-            $request
-                ->file('receipt')
-                ->store(
-                    'receipts',
-                    'public'
-                );
-
-        $registration->update([
-            'payment_receipt' => $receiptPath,
-            'payment_status_id' => 2,
-        ]);
-
-        return response()->json([
-
-            'message' => 'Receipt uploaded successfully',
-
-        ]);
-    }
-
-    public function invoiceByToken(
-        $token
-    ) {
-        $registration =
-            Registration::with([
-
-                'child.guardians',
-                'program',
-                'payer',
-                'paymentStatus',
-
-            ])
-                ->where(
-                    'invoice_token',
-                    $token
-                )
-                ->firstOrFail();
-
-        if (
-            $registration->child &&
-            $registration->child->guardians
-        ) {
-
-            $registration
-                ->child
-                ->guardians
-                ->transform(function ($guardian) {
-
-                    $guardian->guardian_role =
-                        GuardianRole::find(
-                            $guardian
-                                ->pivot
-                                ->guardian_role_id
-                        );
-
-                    return $guardian;
-                });
-        }
-
-        return response()->json([
-
-            'data' => $registration,
-
-        ]);
     }
 
     public function publicChildren()
@@ -670,7 +525,7 @@ class RegistrationController extends Controller
 
             'child',
 
-            'paymentStatus',
+            'billing.paymentStatus',
 
             'programs.category',
 
@@ -709,5 +564,129 @@ class RegistrationController extends Controller
             'program_categories' => $programCategories,
 
         ]);
+    }
+
+    public function generateBilling($id)
+    {
+        $this->forbidNonAdmin();
+
+        return DB::transaction(function () use ($id) {
+
+            $registration = Registration::with([
+                'billing',
+                'registrationPrograms.program',
+            ])->findOrFail($id);
+
+            // ======================
+            // ALREADY HAS BILLING
+            // ======================
+
+            if ($registration->billing) {
+
+                return response()->json([
+                    'message' => 'Billing already exists.',
+                ], 422);
+            }
+
+            // ======================
+            // MUST HAVE PROGRAMS
+            // ======================
+
+            if ($registration->registrationPrograms->isEmpty()) {
+
+                return response()->json([
+                    'message' => 'No registration programs found.',
+                ], 422);
+            }
+
+            // ======================
+            // GENERATE INVOICE NUMBER
+            // ======================
+
+            $today = now()->format('Ymd');
+
+            $count =
+                Billing::whereDate(
+                    'created_at',
+                    today()
+                )->count() + 1;
+
+            $invoiceNumber =
+                'INV-'.
+                $today.
+                '-'.
+                str_pad(
+                    $count,
+                    4,
+                    '0',
+                    STR_PAD_LEFT
+                );
+
+            // ======================
+            // CREATE BILLING
+            // ======================
+
+            $billing = Billing::create([
+
+                'registration_id' => $registration->id,
+
+                'invoice_number' => $invoiceNumber,
+
+                'payment_status_id' => 1,
+
+                'total_amount' => 0,
+
+            ]);
+
+            // ======================
+            // CREATE BILLING ITEMS
+            // ======================
+
+            $total = 0;
+
+            foreach (
+                $registration->registrationPrograms as $item
+            ) {
+
+                $subtotal =
+                    $item->price;
+
+                BillingItem::create([
+
+                    'billing_id' => $billing->id,
+
+                    'program_id' => $item->program_id,
+
+                    'description' => $item->program?->name ?? '-',
+
+                    'price' => $item->price,
+
+                    'quantity' => 1,
+
+                    'subtotal' => $subtotal,
+
+                ]);
+
+                $total += $subtotal;
+            }
+
+            // ======================
+            // UPDATE TOTAL
+            // ======================
+
+            $billing->update([
+
+                'total_amount' => $total,
+
+            ]);
+
+            return response()->json([
+
+                'message' => 'Billing generated successfully.',
+
+                'data' => $billing->fresh(),
+
+            ]);
+        });
     }
 }

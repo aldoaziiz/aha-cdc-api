@@ -9,4 +9,9 @@ class PaymentStatus extends Model
     protected $table = 'payment_statuses';
 
     protected $fillable = ['name'];
+
+    public function billings()
+    {
+        return $this->hasMany(Billing::class);
+    }
 }

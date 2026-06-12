@@ -13,9 +13,6 @@ class Registration extends Model
         'complaint',
         'program_id',
         'payer_id',
-        'payment_status_id',
-        'payment_receipt',
-        'invoice_token',
     ];
 
     public function child()
@@ -56,5 +53,10 @@ class Registration extends Model
         return $this->hasMany(
             RegistrationProgram::class
         );
+    }
+
+    public function billing()
+    {
+        return $this->hasOne(Billing::class);
     }
 }

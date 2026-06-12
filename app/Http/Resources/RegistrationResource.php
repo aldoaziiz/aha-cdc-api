@@ -58,12 +58,16 @@ class RegistrationResource extends JsonResource
                 'name' => $this->payer->name,
             ] : null,
 
-            'payment_status' => $this->paymentStatus ? [
-                'id' => $this->paymentStatus->id,
-                'name' => $this->paymentStatus->name,
-            ] : null,
+            'payment_status' => $this->billing
+                ? [
+                    'id' => $this->billing->paymentStatus?->id,
+                    'name' => $this->billing->paymentStatus?->name,
+                ]
+                : [
+                    'id' => 0,
+                    'name' => 'Not Generated',
+                ],
 
-            'payment_receipt' => $this->payment_receipt,
             'complaint' => $this->complaint,
         ];
     }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\ActivityController;
 use App\Http\Controllers\API\ActivityPhotoController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\BillingController;
 use App\Http\Controllers\API\ChildController;
 use App\Http\Controllers\API\ChildGuardianController;
 use App\Http\Controllers\API\CityController;
@@ -119,6 +120,16 @@ Route::get(
     '/rooms',
     [RoomController::class,
         'index']
+);
+
+Route::get(
+    '/public/billings/{token}',
+    [BillingController::class, 'publicShowByToken']
+);
+
+Route::post(
+    '/public/billings/{token}/upload-receipt',
+    [BillingController::class, 'uploadReceiptByToken']
 );
 
 // PUBLIC UPLOAD
@@ -271,6 +282,21 @@ Route::middleware('auth:sanctum')
             ActivityController::class
         );
 
+        Route::post(
+            '/billings/{id}/approve',
+            [BillingController::class, 'approve']
+        );
+
+        Route::post(
+            '/billings/{id}/reject',
+            [BillingController::class, 'reject']
+        );
+
+        Route::get(
+            '/billings/{id}/pdf',
+            [BillingController::class, 'downloadPdf']
+        );
+
         // ======================
         // REGISTRATION
         // ======================
@@ -294,6 +320,21 @@ Route::middleware('auth:sanctum')
             '/registration-edit-master-data/{id}',
             [RegistrationController::class,
                 'editMasterData']
+        );
+
+        Route::post(
+            '/registrations/{id}/generate-billing',
+            [BillingController::class, 'generateBilling']
+        );
+
+        Route::get(
+            '/billings/{id}',
+            [BillingController::class, 'show']
+        );
+
+        Route::post(
+            '/billings/{id}/cancel',
+            [BillingController::class, 'cancel']
         );
 
         // ======================
