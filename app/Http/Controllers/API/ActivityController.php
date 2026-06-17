@@ -32,7 +32,7 @@ class ActivityController extends Controller
         $query = Activity::with([
             'photos',
             'therapySession.registration.child',
-            'therapySession.registration.program',
+            'therapySession.registration.programs',
             'therapySession.therapist',
         ])
             ->join(
@@ -232,7 +232,7 @@ class ActivityController extends Controller
             'data' => $activity->load([
                 'photos',
                 'therapySession.registration.child',
-                'therapySession.registration.program',
+                'therapySession.registration.programs',
                 'therapySession.therapist',
             ]),
         ]);
@@ -312,7 +312,7 @@ class ActivityController extends Controller
             'data' => $activity->load([
                 'photos',
                 'therapySession.registration.child',
-                'therapySession.registration.program',
+                'therapySession.registration.programs',
                 'therapySession.therapist',
             ]),
 
@@ -445,7 +445,7 @@ class ActivityController extends Controller
 
                 'therapySession.registration.child',
 
-                'therapySession.registration.program',
+                'therapySession.registration.programs',
 
                 'therapySession.therapist',
 

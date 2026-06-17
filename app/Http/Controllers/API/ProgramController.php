@@ -122,6 +122,7 @@ class ProgramController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'nullable|numeric',
+            'session_count' => 'required|integer|min:0',
             'order_number' => 'nullable|integer',
             'clinic_id' => 'nullable|exists:clinics,id',
             'program_category_id' => 'nullable|exists:program_categories,id',

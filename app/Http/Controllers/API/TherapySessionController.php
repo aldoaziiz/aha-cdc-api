@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Registration;
 use App\Models\TherapySession;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TherapySessionController extends Controller
 {
@@ -41,7 +44,7 @@ class TherapySessionController extends Controller
         $query = TherapySession::with([
             'therapist.staffRole',
             'registration.child',
-            'registration.program',
+            'registration.programs',
             'activity.photos',
         ]);
 
@@ -136,6 +139,13 @@ class TherapySessionController extends Controller
         // PAGINATION
         // ======================
 
+        if ($request->registration_id) {
+
+            return response()->json([
+                'data' => $query->get(),
+            ]);
+        }
+
         $data = $query->paginate(
             $request->per_page ?? 10
         );
@@ -201,9 +211,56 @@ class TherapySessionController extends Controller
         //
     }
 
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
         $this->forbidNonAdmin();
+
+        $session = TherapySession::findOrFail($id);
+
+        // LOCK
+        if ($session->activity) {
+            return response()->json([
+                'message' => 'Completed sessions cannot be edited.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'therapist_id' => 'required|exists:staff,id',
+            'therapy_date' => 'required|date',
+            'start_time' => 'required',
+            'end_time' => 'required|after:start_time',
+            'notes' => 'nullable|string',
+        ]);
+
+        // therapist conflict
+        $conflict = TherapySession::where(
+            'therapist_id',
+            $validated['therapist_id']
+        )
+            ->where('id', '!=', $session->id)
+            ->whereDate(
+                'therapy_date',
+                $validated['therapy_date']
+            )
+            ->where(function ($query) use ($validated) {
+                $query
+                    ->where('start_time', '<', $validated['end_time'])
+                    ->where('end_time', '>', $validated['start_time']);
+            })
+            ->exists();
+
+        if ($conflict) {
+            return response()->json([
+                'message' => 'Therapist already has another session.',
+            ], 422);
+        }
+
+        $session->update($validated);
+
+        return response()->json([
+            'message' => 'Session updated successfully.',
+            'data' => $session->fresh(['therapist']),
+        ]);
     }
 
     public function destroy($id)
@@ -212,10 +269,206 @@ class TherapySessionController extends Controller
 
         $session = TherapySession::findOrFail($id);
 
+        if ($session->activity) {
+            return response()->json([
+                'message' => 'Completed sessions cannot be deleted.',
+            ], 422);
+        }
         $session->delete();
 
         return response()->json([
             'message' => 'Session deleted',
         ]);
+    }
+
+    public function generate(Request $request)
+    {
+        $this->forbidNonAdmin();
+
+        $validated = $request->validate([
+            'registration_id' => 'required|exists:registrations,id',
+
+            'therapist_id' => 'required|exists:staff,id',
+
+            'days' => 'required|array|min:1',
+
+            'days.*' => 'integer|between:0,6',
+
+            'start_date' => 'required|date',
+
+            'start_time' => 'required',
+
+            'end_time' => 'required|after:start_time',
+
+            'notes' => 'nullable|string',
+        ]);
+
+        $registration = Registration::with(
+            'programs'
+        )->findOrFail(
+            $validated['registration_id']
+        );
+
+        $totalSessions = $registration
+            ->programs
+            ->sum('session_count');
+
+        if ($totalSessions <= 0) {
+
+            return response()->json([
+                'message' => 'Selected programs do not have sessions.',
+            ], 422);
+        }
+
+        if (
+            TherapySession::where(
+                'registration_id',
+                $registration->id
+            )->exists()
+        ) {
+
+            return response()->json([
+                'message' => 'Sessions have already been generated.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use (
+            $validated,
+            $totalSessions
+        ) {
+
+            $generatedDates = [];
+
+            $currentDate = Carbon::parse(
+                $validated['start_date']
+            );
+
+            // ======================
+            // GENERATE DATES
+            // ======================
+
+            while (
+                count($generatedDates)
+                < $totalSessions
+            ) {
+
+                $dayOfWeek =
+                    $currentDate->dayOfWeek;
+
+                if (
+                    in_array(
+                        $dayOfWeek,
+                        $validated['days']
+                    )
+                ) {
+
+                    $generatedDates[] =
+                        $currentDate->copy();
+                }
+
+                $currentDate->addDay();
+            }
+
+            // ======================
+            // CHECK CONFLICTS
+            // ======================
+
+            $conflicts = [];
+
+            foreach (
+                $generatedDates as $date
+            ) {
+
+                $exists =
+                    TherapySession::where(
+                        'therapist_id',
+                        $validated['therapist_id']
+                    )
+                        ->whereDate(
+                            'therapy_date',
+                            $date
+                        )
+                        ->where(function ($query) use ($validated) {
+
+                            $query
+                                ->where(
+                                    'start_time',
+                                    '<',
+                                    $validated['end_time']
+                                )
+                                ->where(
+                                    'end_time',
+                                    '>',
+                                    $validated['start_time']
+                                );
+                        })
+                        ->exists();
+
+                if ($exists) {
+
+                    $conflicts[] = [
+                        'date' => $date
+                            ->format('Y-m-d'),
+                    ];
+                }
+            }
+
+            if (! empty($conflicts)) {
+
+                return response()->json([
+                    'message' => 'Therapist conflict detected.',
+
+                    'conflicts' => $conflicts,
+                ], 422);
+            }
+
+            // ======================
+            // CREATE SESSIONS
+            // ======================
+
+            $sessions = [];
+
+            foreach (
+                $generatedDates as $date
+            ) {
+
+                $sessions[] =
+                    TherapySession::create([
+
+                        'registration_id' => $validated[
+                                'registration_id'
+                            ],
+
+                        'therapist_id' => $validated[
+                                'therapist_id'
+                            ],
+
+                        'therapy_date' => $date->format(
+                            'Y-m-d'
+                        ),
+
+                        'start_time' => $validated[
+                                'start_time'
+                            ],
+
+                        'end_time' => $validated[
+                                'end_time'
+                            ],
+
+                        'notes' => $validated[
+                                'notes'
+                            ] ?? null,
+                    ]);
+            }
+
+            return response()->json([
+                'message' => count($sessions)
+                    .' sessions generated successfully.',
+
+                'target_sessions' => $totalSessions,
+
+                'data' => $sessions,
+            ]);
+        });
     }
 }

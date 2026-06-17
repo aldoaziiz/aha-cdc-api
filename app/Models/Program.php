@@ -12,6 +12,7 @@ class Program extends Model
         'name',
         'description',
         'price',
+        'session_count',
         'clinic_id',
         'program_category_id',
         'order_number',

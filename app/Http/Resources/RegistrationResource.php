@@ -50,6 +50,7 @@ class RegistrationResource extends JsonResource
                     'id' => $program->id,
                     'name' => $program->name,
                     'price' => $program->pivot->price,
+                    'session_count' => $program->session_count,
                 ];
             }),
 

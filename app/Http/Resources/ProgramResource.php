@@ -19,6 +19,7 @@ class ProgramResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'price' => $this->price,
+            'session_count' => $this->session_count,
             'clinic' => $this->whenLoaded('clinic', function () {
                 return [
                     'id' => $this->clinic->id,

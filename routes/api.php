@@ -277,6 +277,11 @@ Route::middleware('auth:sanctum')
             TherapySessionController::class
         );
 
+        Route::post(
+            '/therapy-sessions/generate',
+            [TherapySessionController::class, 'generate']
+        );
+
         Route::apiResource(
             'activities',
             ActivityController::class
