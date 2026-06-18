@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Registration;
+use App\Models\Staff;
 use App\Models\TherapySession;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -208,7 +209,7 @@ class TherapySessionController extends Controller
 
     public function show(string $id)
     {
-        //
+        dd('masuk ke show');
     }
 
     public function update(Request $request, $id)
@@ -470,5 +471,54 @@ class TherapySessionController extends Controller
                 'data' => $sessions,
             ]);
         });
+    }
+
+    public function availability(Request $request)
+    {
+
+        $startDate = $request->start_date;
+
+        $endDate = $request->end_date;
+
+        $therapistId = $request->therapist_id;
+
+        $therapists = Staff::query()
+            ->whereHas('staffRole', function ($q) {
+
+                $q->where(
+                    'name',
+                    'Therapist'
+                );
+
+            });
+
+        if ($therapistId) {
+
+            $therapists->where(
+                'id',
+                $therapistId
+            );
+        }
+
+        $therapists = $therapists
+            ->orderBy('name')
+            ->get();
+
+        $sessions = TherapySession::with([
+            'registration.child',
+        ])
+            ->whereBetween(
+                'therapy_date',
+                [
+                    $startDate,
+                    $endDate,
+                ]
+            )
+            ->get();
+
+        return response()->json([
+            'therapists' => $therapists,
+            'sessions' => $sessions,
+        ]);
     }
 }

@@ -272,14 +272,19 @@ Route::middleware('auth:sanctum')
             RegistrationController::class
         );
 
-        Route::apiResource(
-            'therapy-sessions',
-            TherapySessionController::class
-        );
-
         Route::post(
             '/therapy-sessions/generate',
             [TherapySessionController::class, 'generate']
+        );
+
+        Route::get(
+            'therapy-sessions/availability',
+            [TherapySessionController::class, 'availability']
+        );
+
+        Route::apiResource(
+            'therapy-sessions',
+            TherapySessionController::class
         );
 
         Route::apiResource(
