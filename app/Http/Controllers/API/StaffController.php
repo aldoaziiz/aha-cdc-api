@@ -54,11 +54,11 @@ class StaffController extends Controller
 
             'email' => 'required|email|max:255',
 
-            'phone' => 'nullable|string|max:255',
+            'phone' => 'required|string|max:255',
 
             'address' => 'nullable|string',
 
-            'staff_role_id' => 'nullable|exists:staff_roles,id',
+            'staff_role_id' => 'required|exists:staff_roles,id',
 
         ]);
 
@@ -194,7 +194,6 @@ class StaffController extends Controller
         return response()->json($staff);
     }
 
-    // update
     public function update(
         Request $request,
         $id
@@ -211,26 +210,60 @@ class StaffController extends Controller
 
         $validated = $request->validate([
 
-            'name' => 'sometimes|string|max:255',
+            'name' => 'required|string|max:255',
 
             'email' => [
-                'sometimes',
+                'required',
                 'email',
                 Rule::unique('users', 'email')
                     ->ignore($staff->user_id),
             ],
 
-            'phone' => 'nullable|string|max:255',
+            'phone' => 'required|string|max:255',
 
             'address' => 'nullable|string',
 
-            'staff_role_id' => 'nullable|exists:staff_roles,id',
+            'staff_role_id' => 'required|exists:staff_roles,id',
 
             'status_id' => 'nullable|exists:statuses,id',
 
         ]);
 
         $staff->update($validated);
+
+        $role = 'staff';
+
+        $staffRole =
+            StaffRole::find(
+                $validated['staff_role_id']
+            );
+
+        $staffRoleName =
+            strtolower(
+                $staffRole?->name ?? ''
+            );
+
+        if (
+            str_contains(
+                $staffRoleName,
+                'therapist'
+            )
+        ) {
+
+            $role = 'therapist';
+
+        }
+
+        if (
+            str_contains(
+                $staffRoleName,
+                'admin'
+            )
+        ) {
+
+            $role = 'admin';
+
+        }
 
         if ($staff->user_id) {
             $user = User::find($staff->user_id);
@@ -239,6 +272,7 @@ class StaffController extends Controller
                 $user->update([
                     'name' => $staff->name,
                     'email' => $staff->email,
+                    'role' => $role,
                 ]);
             }
         }
