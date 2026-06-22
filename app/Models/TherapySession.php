@@ -14,6 +14,7 @@ class TherapySession extends Model
         'start_time',
         'end_time',
         'notes',
+        'allow_late_activity',
     ];
 
     // ======================

@@ -66,6 +66,31 @@ class TherapySessionController extends Controller
         }
 
         // ======================
+        // THERAPIST TODAY ONLY
+        // ======================
+
+        if (
+            $user->role ===
+            'therapist' &&
+            $request->without_activity
+        ) {
+
+            $query->where(function ($q) {
+
+                $q->whereDate(
+                    'therapy_date',
+                    now()->toDateString()
+                )
+                    ->orWhere(
+                        'allow_late_activity',
+                        true
+                    );
+
+            });
+
+        }
+
+        // ======================
         // SEARCH CHILD
         // ======================
 
@@ -519,6 +544,21 @@ class TherapySessionController extends Controller
         return response()->json([
             'therapists' => $therapists,
             'sessions' => $sessions,
+        ]);
+    }
+
+    public function allowLateActivity($id)
+    {
+        $this->forbidNonAdmin();
+
+        $session = TherapySession::findOrFail($id);
+
+        $session->update([
+            'allow_late_activity' => true,
+        ]);
+
+        return response()->json([
+            'message' => 'Late activity allowed.',
         ]);
     }
 }

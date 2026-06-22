@@ -282,6 +282,11 @@ Route::middleware('auth:sanctum')
             [TherapySessionController::class, 'availability']
         );
 
+        Route::put(
+            'therapy-sessions/{id}/allow-late-activity',
+            [TherapySessionController::class, 'allowLateActivity']
+        );
+
         Route::apiResource(
             'therapy-sessions',
             TherapySessionController::class
