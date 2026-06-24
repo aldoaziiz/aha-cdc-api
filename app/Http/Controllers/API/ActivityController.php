@@ -179,7 +179,7 @@ class ActivityController extends Controller
                 ->file('video')
                 ->store(
                     'activities/videos',
-                    'public'
+                    'r2'
                 );
         }
 
@@ -209,7 +209,7 @@ class ActivityController extends Controller
 
                 $photoPath = $photo->store(
                     'activities/photos',
-                    'public'
+                    'r2'
                 );
 
                 ActivityPhoto::create([
@@ -280,7 +280,7 @@ class ActivityController extends Controller
 
         foreach ($activity->photos as $photo) {
 
-            Storage::disk('public')
+            Storage::disk('r2')
                 ->delete($photo->photo);
         }
 
@@ -290,7 +290,7 @@ class ActivityController extends Controller
 
         if ($activity->video) {
 
-            Storage::disk('public')
+            Storage::disk('r2')
                 ->delete($activity->video);
         }
 
@@ -380,7 +380,7 @@ class ActivityController extends Controller
 
             if ($activity->video) {
 
-                Storage::disk('public')
+                Storage::disk('r2')
                     ->delete($activity->video);
             }
 
@@ -390,7 +390,7 @@ class ActivityController extends Controller
                 ->file('video')
                 ->store(
                     'activities/videos',
-                    'public'
+                    'r2'
                 );
         }
 
@@ -418,14 +418,14 @@ class ActivityController extends Controller
 
                 $photoPath = $photo->store(
                     'activities/photos',
-                    'public'
+                    'r2'
                 );
 
                 ActivityPhoto::create([
 
                     'activity_id' => $activity->id,
 
-                    'photo' => $photoPath,
+                    'r2' => $photoPath,
 
                 ]);
             }
@@ -497,7 +497,7 @@ class ActivityController extends Controller
 
         if ($activity->video) {
 
-            Storage::disk('public')
+            Storage::disk('r2')
                 ->delete($activity->video);
         }
 

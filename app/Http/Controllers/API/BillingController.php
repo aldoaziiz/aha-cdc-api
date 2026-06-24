@@ -282,7 +282,7 @@ class BillingController extends Controller
 
             if ($billing->payment_receipt) {
 
-                Storage::disk('public')
+                Storage::disk('r2')
                     ->delete($billing->payment_receipt);
             }
 
@@ -294,7 +294,7 @@ class BillingController extends Controller
                 ->file('receipt')
                 ->store(
                     'payment-receipts',
-                    'public'
+                    'r2'
                 );
 
             // ======================
@@ -372,7 +372,7 @@ class BillingController extends Controller
 
         if ($billing->payment_receipt) {
 
-            Storage::disk('public')
+            Storage::disk('r2')
                 ->delete($billing->payment_receipt);
         }
 
