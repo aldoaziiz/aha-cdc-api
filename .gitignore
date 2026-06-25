@@ -7,7 +7,6 @@
 
 # Environment
 .env
-.env.backup
 .env.production
 
 # Logs
