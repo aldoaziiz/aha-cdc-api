@@ -15,10 +15,9 @@ class ActivityPhotoController extends Controller
         // DELETE FILE
         // ======================
 
-        Storage::disk('r2')
-            ->delete(
-                $activityPhoto->photo
-            );
+        Storage::delete(
+            $activityPhoto->photo
+        );
 
         // ======================
         // DELETE DB

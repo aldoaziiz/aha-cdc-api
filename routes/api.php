@@ -25,7 +25,6 @@ use App\Http\Controllers\API\TherapySessionController;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 
 // ======================
 // TEST
@@ -55,16 +54,6 @@ Route::get('/db-ping', function () {
         'ok' => true,
     ]);
 
-});
-
-Route::get('/test-r2', function () {
-
-    Storage::disk('r2')->put(
-        'test/hello.txt',
-        'Hello from AHA CDC'
-    );
-
-    return 'success';
 });
 
 // ======================

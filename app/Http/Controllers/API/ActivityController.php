@@ -178,8 +178,7 @@ class ActivityController extends Controller
             $videoPath = $request
                 ->file('video')
                 ->store(
-                    'activities/videos',
-                    'r2'
+                    'activities/videos'
                 );
         }
 
@@ -208,8 +207,7 @@ class ActivityController extends Controller
             ) {
 
                 $photoPath = $photo->store(
-                    'activities/photos',
-                    'r2'
+                    'activities/photos'
                 );
 
                 ActivityPhoto::create([
@@ -280,8 +278,7 @@ class ActivityController extends Controller
 
         foreach ($activity->photos as $photo) {
 
-            Storage::disk('r2')
-                ->delete($photo->photo);
+            Storage::delete($photo->photo);
         }
 
         // ======================
@@ -290,8 +287,7 @@ class ActivityController extends Controller
 
         if ($activity->video) {
 
-            Storage::disk('r2')
-                ->delete($activity->video);
+            Storage::delete($activity->video);
         }
 
         // ======================
@@ -380,8 +376,7 @@ class ActivityController extends Controller
 
             if ($activity->video) {
 
-                Storage::disk('r2')
-                    ->delete($activity->video);
+                Storage::delete($activity->video);
             }
 
             // STORE NEW VIDEO
@@ -389,8 +384,7 @@ class ActivityController extends Controller
             $videoPath = $request
                 ->file('video')
                 ->store(
-                    'activities/videos',
-                    'r2'
+                    'activities/videos'
                 );
         }
 
@@ -417,8 +411,7 @@ class ActivityController extends Controller
             ) {
 
                 $photoPath = $photo->store(
-                    'activities/photos',
-                    'r2'
+                    'activities/photos'
                 );
 
                 ActivityPhoto::create([
@@ -497,8 +490,7 @@ class ActivityController extends Controller
 
         if ($activity->video) {
 
-            Storage::disk('r2')
-                ->delete($activity->video);
+            Storage::delete($activity->video);
         }
 
         // ======================
