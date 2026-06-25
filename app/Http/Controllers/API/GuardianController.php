@@ -127,8 +127,13 @@ class GuardianController extends Controller
         }
 
         $validated = $request->validate([
+            'id_number' => 'nullable|string|max:255',
             'name' => 'sometimes|string|max:255',
-
+            'phone' => 'nullable|string|max:255',
+            'occupation' => 'nullable|string|max:255',
+            'social_media' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'status_id' => 'sometimes|integer|exists:statuses,id',
             'email' => [
                 'sometimes',
                 'email',
@@ -136,11 +141,6 @@ class GuardianController extends Controller
                     ->ignore($guardian->user_id),
             ],
 
-            'phone' => 'nullable|string|max:255',
-            'occupation' => 'nullable|string|max:255',
-            'social_media' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'status_id' => 'sometimes|integer|exists:statuses,id',
         ]);
 
         $guardian->update($validated);

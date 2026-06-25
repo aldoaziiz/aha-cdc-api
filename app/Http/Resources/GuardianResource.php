@@ -19,6 +19,8 @@ class GuardianResource extends JsonResource
             'phone' => $this->phone,
             'address' => $this->address,
             'id_number' => $this->id_number,
+            'occupation' => $this->occupation,
+            'social_media' => $this->social_media,
 
             'role' => $this->whenLoaded('role', function () {
                 return [
