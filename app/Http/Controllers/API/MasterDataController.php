@@ -42,10 +42,10 @@ class MasterDataController extends Controller
             'schools' => School::orderBy('name', 'asc')
                 ->get(),
 
-            'school_classes' => SchoolClass::orderBy('name', 'asc')
+            'school_classes' => SchoolClass::orderBy('id', 'asc')
                 ->get(),
 
-            'school_educations' => SchoolEducation::orderBy('name')
+            'school_educations' => SchoolEducation::orderBy('id')
                 ->get(),
 
             'staff_roles' => StaffRole::orderBy('name', 'asc')
