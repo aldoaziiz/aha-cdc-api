@@ -38,6 +38,12 @@ class ProgramResource extends JsonResource
                     'name' => $this->status->name,
                 ];
             }),
+            'payer' => $this->whenLoaded('payer', function () {
+                return [
+                    'id' => $this->payer->id,
+                    'name' => $this->payer->name,
+                ];
+            }),
         ];
     }
 }

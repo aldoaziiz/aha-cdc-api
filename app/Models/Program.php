@@ -10,6 +10,7 @@ class Program extends Model
 
     protected $fillable = [
         'name',
+        'payer_id',
         'description',
         'price',
         'session_count',
@@ -52,5 +53,10 @@ class Program extends Model
             Registration::class,
             'registration_programs'
         )->withPivot('price');
+    }
+
+    public function payer()
+    {
+        return $this->belongsTo(Payer::class);
     }
 }

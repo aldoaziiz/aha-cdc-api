@@ -12,6 +12,7 @@ class ProgramController extends Controller
     public function index(Request $request)
     {
         $query = Program::with([
+            'payer:id,name',
             'clinic:id,name',
             'category:id,name',
             'status:id,name',
@@ -120,6 +121,7 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'payer_id' => 'required|exists:payers,id',
             'description' => 'nullable|string',
             'price' => 'nullable|numeric',
             'session_count' => 'required|integer|min:0',
@@ -138,6 +140,7 @@ class ProgramController extends Controller
             'data' => $program->load([
                 'clinic:id,name',
                 'category:id,name',
+                'payer:id,name',
                 'status:id,name',
             ]),
         ], 201);
@@ -148,6 +151,7 @@ class ProgramController extends Controller
         $program = Program::with([
             'clinic:id,name',
             'category:id,name',
+            'payer:id,name',
             'status:id,name',
         ])->find($id);
 
@@ -170,6 +174,7 @@ class ProgramController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
+            'payer_id' => 'required|exists:payers,id',
             'description' => 'nullable|string',
             'price' => 'nullable|numeric',
             'order_number' => 'nullable|integer',
@@ -185,6 +190,7 @@ class ProgramController extends Controller
             'data' => $program->load([
                 'clinic:id,name',
                 'category:id,name',
+                'payer:id,name',
                 'status:id,name',
             ]),
         ]);
