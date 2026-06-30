@@ -314,19 +314,17 @@ class TherapySessionController extends Controller
         $validated = $request->validate([
             'registration_id' => 'required|exists:registrations,id',
 
-            'therapist_id' => 'required|exists:staff,id',
-
-            'days' => 'required|array|min:1',
-
-            'days.*' => 'integer|between:0,6',
-
             'start_date' => 'required|date',
 
-            'start_time' => 'required',
-
-            'end_time' => 'required|after:start_time',
-
             'notes' => 'nullable|string',
+
+            'schedule_configs' => 'required|array|min:1',
+
+            'schedule_configs.*.day' => 'required|integer|between:0,6',
+
+            'schedule_configs.*.therapist_id' => 'required|exists:staff,id',
+
+            'schedule_configs.*.time_slot' => 'required|string',
         ]);
 
         $registration = Registration::with(
@@ -363,33 +361,26 @@ class TherapySessionController extends Controller
             $totalSessions
         ) {
 
-            $generatedDates = [];
+            $generatedSchedules = [];
 
-            $currentDate = Carbon::parse(
-                $validated['start_date']
-            );
+            $currentDate = Carbon::parse($validated['start_date']);
 
-            // ======================
-            // GENERATE DATES
-            // ======================
+            while (count($generatedSchedules) < $totalSessions) {
 
-            while (
-                count($generatedDates)
-                < $totalSessions
-            ) {
+                foreach ($validated['schedule_configs'] as $config) {
 
-                $dayOfWeek =
-                    $currentDate->dayOfWeek;
+                    if (
+                        $currentDate->dayOfWeek === $config['day']
+                    ) {
 
-                if (
-                    in_array(
-                        $dayOfWeek,
-                        $validated['days']
-                    )
-                ) {
+                        $generatedSchedules[] = [
+                            'date' => $currentDate->copy(),
+                            'therapist_id' => $config['therapist_id'],
+                            'time_slot' => $config['time_slot'],
+                        ];
 
-                    $generatedDates[] =
-                        $currentDate->copy();
+                        break;
+                    }
                 }
 
                 $currentDate->addDay();
@@ -401,40 +392,35 @@ class TherapySessionController extends Controller
 
             $conflicts = [];
 
-            foreach (
-                $generatedDates as $date
-            ) {
+            foreach ($generatedSchedules as $schedule) {
 
-                $exists =
-                    TherapySession::where(
-                        'therapist_id',
-                        $validated['therapist_id']
+                [$startTime, $endTime] = array_map(
+                    'trim',
+                    explode('-', $schedule['time_slot'])
+                );
+
+                $exists = TherapySession::where(
+                    'therapist_id',
+                    $schedule['therapist_id']
+                )
+                    ->whereDate(
+                        'therapy_date',
+                        $schedule['date']
                     )
-                        ->whereDate(
-                            'therapy_date',
-                            $date
-                        )
-                        ->where(function ($query) use ($validated) {
+                    ->where(function ($query) use ($startTime, $endTime) {
 
-                            $query
-                                ->where(
-                                    'start_time',
-                                    '<',
-                                    $validated['end_time']
-                                )
-                                ->where(
-                                    'end_time',
-                                    '>',
-                                    $validated['start_time']
-                                );
-                        })
-                        ->exists();
+                        $query
+                            ->where('start_time', '<', $endTime)
+                            ->where('end_time', '>', $startTime);
+                    })
+                    ->exists();
 
                 if ($exists) {
 
                     $conflicts[] = [
-                        'date' => $date
-                            ->format('Y-m-d'),
+                        'date' => $schedule['date']->format('Y-m-d'),
+                        'therapist_id' => $schedule['therapist_id'],
+                        'time_slot' => $schedule['time_slot'],
                     ];
                 }
             }
@@ -454,37 +440,27 @@ class TherapySessionController extends Controller
 
             $sessions = [];
 
-            foreach (
-                $generatedDates as $date
-            ) {
+            foreach ($generatedSchedules as $schedule) {
 
-                $sessions[] =
-                    TherapySession::create([
+                [$startTime, $endTime] = array_map(
+                    'trim',
+                    explode('-', $schedule['time_slot'])
+                );
 
-                        'registration_id' => $validated[
-                                'registration_id'
-                            ],
+                $sessions[] = TherapySession::create([
 
-                        'therapist_id' => $validated[
-                                'therapist_id'
-                            ],
+                    'registration_id' => $validated['registration_id'],
 
-                        'therapy_date' => $date->format(
-                            'Y-m-d'
-                        ),
+                    'therapist_id' => $schedule['therapist_id'],
 
-                        'start_time' => $validated[
-                                'start_time'
-                            ],
+                    'therapy_date' => $schedule['date']->format('Y-m-d'),
 
-                        'end_time' => $validated[
-                                'end_time'
-                            ],
+                    'start_time' => $startTime,
 
-                        'notes' => $validated[
-                                'notes'
-                            ] ?? null,
-                    ]);
+                    'end_time' => $endTime,
+
+                    'notes' => $validated['notes'] ?? null,
+                ]);
             }
 
             return response()->json([
