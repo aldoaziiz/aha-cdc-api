@@ -371,14 +371,12 @@ class ActivityController extends Controller
         // SESSION STATUS
         // ======================
 
-        $therapySession = TherapySession::findOrFail(
-            $request->therapy_session_id
-        );
+        $therapySession = $activity->therapySession;
 
         if ($therapySession->therapy_session_status_id === 3) {
 
             return response()->json([
-                'message' => 'Cannot create activity for Alpha session.',
+                'message' => 'Cannot update activity for Alpha session.',
             ], 422);
         }
 
