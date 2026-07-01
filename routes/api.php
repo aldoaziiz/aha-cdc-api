@@ -287,6 +287,11 @@ Route::middleware('auth:sanctum')
             [TherapySessionController::class, 'allowLateActivity']
         );
 
+        Route::patch(
+            'therapy-sessions/{therapySession}/mark-alpha',
+            [TherapySessionController::class, 'markAlpha']
+        );
+
         Route::apiResource(
             'therapy-sessions',
             TherapySessionController::class

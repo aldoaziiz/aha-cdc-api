@@ -9,6 +9,7 @@ class TherapySession extends Model
     protected $fillable = [
         'registration_id',
         'therapist_id',
+        'therapy_session_status_id',
         'room_id',
         'therapy_date',
         'start_time',
@@ -29,6 +30,11 @@ class TherapySession extends Model
     public function therapist()
     {
         return $this->belongsTo(Staff::class, 'therapist_id');
+    }
+
+    public function therapySessionStatus()
+    {
+        return $this->belongsTo(TherapySessionStatus::class);
     }
 
     public function room()

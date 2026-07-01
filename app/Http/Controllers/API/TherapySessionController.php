@@ -44,6 +44,7 @@ class TherapySessionController extends Controller
 
         $query = TherapySession::with([
             'therapist.staffRole',
+            'therapySessionStatus',
             'registration.child',
             'registration.programs',
             'activity.photos',
@@ -218,6 +219,7 @@ class TherapySessionController extends Controller
         // buat sesi terapi
         $session = TherapySession::create([
             'registration_id' => $request->registration_id,
+            'therapy_session_status_id' => 1,
             'therapist_id' => $request->therapist_id,
             'therapy_date' => $request->therapy_date,
             'start_time' => $request->start_time,
@@ -285,7 +287,10 @@ class TherapySessionController extends Controller
 
         return response()->json([
             'message' => 'Session updated successfully.',
-            'data' => $session->fresh(['therapist']),
+            'data' => $session->fresh([
+                'therapist',
+                'therapySessionStatus',
+            ]),
         ]);
     }
 
@@ -453,6 +458,8 @@ class TherapySessionController extends Controller
 
                     'therapist_id' => $schedule['therapist_id'],
 
+                    'therapy_session_status_id' => 1,
+
                     'therapy_date' => $schedule['date']->format('Y-m-d'),
 
                     'start_time' => $startTime,
@@ -535,6 +542,30 @@ class TherapySessionController extends Controller
 
         return response()->json([
             'message' => 'Late activity allowed.',
+        ]);
+    }
+
+    public function markAlpha(TherapySession $therapySession)
+    {
+        $this->forbidNonAdmin();
+
+        if ($therapySession->therapy_session_status_id !== 1) {
+
+            return response()->json([
+                'message' => 'Only scheduled sessions can be marked as Alpha.',
+            ], 422);
+        }
+
+        $therapySession->update([
+            'therapy_session_status_id' => 3,
+        ]);
+
+        return response()->json([
+            'message' => 'Session marked as Alpha.',
+            'data' => $therapySession->fresh([
+                'therapist',
+                'therapySessionStatus',
+            ]),
         ]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Models\ActivityPhoto;
+use App\Models\TherapySession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -153,6 +154,21 @@ class ActivityController extends Controller
         ]);
 
         // ======================
+        // SESSION STATUS
+        // ======================
+
+        $therapySession = TherapySession::findOrFail(
+            $request->therapy_session_id
+        );
+
+        if ($therapySession->therapy_session_status_id === 3) {
+
+            return response()->json([
+                'message' => 'Cannot create activity for Alpha session.',
+            ], 422);
+        }
+
+        // ======================
         // MINIMUM CONTENT
         // ======================
 
@@ -194,6 +210,10 @@ class ActivityController extends Controller
 
             'video' => $videoPath,
 
+        ]);
+
+        $activity->therapySession()->update([
+            'therapy_session_status_id' => 2,
         ]);
 
         // ======================
@@ -291,6 +311,14 @@ class ActivityController extends Controller
         }
 
         // ======================
+        // UPDATE SESSION STATUS
+        // ======================
+
+        $activity->therapySession()->update([
+            'therapy_session_status_id' => 1,
+        ]);
+
+        // ======================
         // DELETE ACTIVITY
         // ======================
 
@@ -338,6 +366,21 @@ class ActivityController extends Controller
             'photos.*' => 'nullable|image|max:5120',
 
         ]);
+
+        // ======================
+        // SESSION STATUS
+        // ======================
+
+        $therapySession = TherapySession::findOrFail(
+            $request->therapy_session_id
+        );
+
+        if ($therapySession->therapy_session_status_id === 3) {
+
+            return response()->json([
+                'message' => 'Cannot create activity for Alpha session.',
+            ], 422);
+        }
 
         if (
             auth()->user()->role ===
