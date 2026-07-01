@@ -399,9 +399,17 @@ class BillingController extends Controller
             'paymentStatus',
         ])->findOrFail($id);
 
+        $downloadedBy = auth()->user();
+
+        $generatedAt = now()->locale('id');
+
         $pdf = Pdf::loadView(
             'pdf.invoice',
-            compact('billing')
+            compact(
+                'billing',
+                'downloadedBy',
+                'generatedAt'
+            )
         );
 
         return $pdf->download(
