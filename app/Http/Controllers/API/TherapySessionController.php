@@ -404,10 +404,14 @@ class TherapySessionController extends Controller
                     explode('-', $schedule['time_slot'])
                 );
 
-                $exists = TherapySession::where(
-                    'therapist_id',
-                    $schedule['therapist_id']
-                )
+                $conflictSession = TherapySession::with([
+                    'therapist',
+                    'registration.child',
+                ])
+                    ->where(
+                        'therapist_id',
+                        $schedule['therapist_id']
+                    )
                     ->whereDate(
                         'therapy_date',
                         $schedule['date']
@@ -418,14 +422,20 @@ class TherapySessionController extends Controller
                             ->where('start_time', '<', $endTime)
                             ->where('end_time', '>', $startTime);
                     })
-                    ->exists();
+                    ->first();
 
-                if ($exists) {
+                if ($conflictSession) {
 
                     $conflicts[] = [
-                        'date' => $schedule['date']->format('Y-m-d'),
-                        'therapist_id' => $schedule['therapist_id'],
+
+                        'therapy_date' => $schedule['date']->format('Y-m-d'),
+
                         'time_slot' => $schedule['time_slot'],
+
+                        'therapist_name' => $conflictSession->therapist->name,
+
+                        'child_name' => $conflictSession->registration->child->name,
+
                     ];
                 }
             }
