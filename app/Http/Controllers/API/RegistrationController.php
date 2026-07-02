@@ -55,11 +55,80 @@ class RegistrationController extends Controller
 
     public function index(Request $request)
     {
-        $query = Registration::orderBy('created_at', 'desc')->with([
+        $query = Registration::with([
             'child.guardians',
             'programs',
             'billing.paymentStatus',
         ]);
+
+        $query->leftJoin(
+            'children',
+            'registrations.child_id',
+            '=',
+            'children.id'
+        );
+
+        $query->leftJoin(
+            'billings',
+            'registrations.id',
+            '=',
+            'billings.registration_id'
+        );
+
+        $query->select('registrations.*');
+
+        // ======================
+        // SORTING
+        // ======================
+
+        $sortBy = $request->sort_by;
+        $sortOrder = $request->sort_order ?? 'asc';
+
+        switch ($sortBy) {
+
+            case 'child':
+
+                $query->orderBy(
+                    'children.name',
+                    $sortOrder
+                );
+
+                break;
+
+            case 'payment_status.id':
+
+                $query->orderBy(
+                    'billings.payment_status_id',
+                    $sortOrder
+                );
+
+                break;
+
+            case 'registration_number':
+
+                $query->orderBy(
+                    'registrations.registration_number',
+                    $sortOrder
+                );
+
+                break;
+
+            case 'created_at':
+
+                $query->orderBy(
+                    'registrations.created_at',
+                    $sortOrder
+                );
+
+                break;
+
+            default:
+
+                $query->orderBy(
+                    'registrations.created_at',
+                    'desc'
+                );
+        }
 
         // SEARCH
         if ($request->search) {
