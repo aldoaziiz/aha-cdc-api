@@ -63,6 +63,12 @@ class AuthController extends Controller
         }
 
         // ======================
+        // REMOVE OLD TOKENS
+        // ======================
+
+        $user->tokens()->delete();
+
+        // ======================
         // CREATE TOKEN
         // ======================
 

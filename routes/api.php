@@ -156,233 +156,235 @@ Route::post(
 // PROTECTED
 // ======================
 
-Route::middleware('auth:sanctum')
-    ->group(function () {
+Route::middleware([
+    'auth:sanctum',
+    'daily.session',
+])->group(function () {
 
-        // ======================
-        // AUTH
-        // ======================
+    // ======================
+    // AUTH
+    // ======================
 
-        Route::get(
-            '/me',
-            [AuthController::class, 'me']
-        );
+    Route::get(
+        '/me',
+        [AuthController::class, 'me']
+    );
 
-        Route::post(
-            '/logout',
-            [AuthController::class, 'logout']
-        );
+    Route::post(
+        '/logout',
+        [AuthController::class, 'logout']
+    );
 
-        Route::post(
-            '/registrations/{registration}/generate-invoice-link',
-            [RegistrationController::class,
-                'generateInvoiceLink']
-        );
+    Route::post(
+        '/registrations/{registration}/generate-invoice-link',
+        [RegistrationController::class,
+            'generateInvoiceLink']
+    );
 
-        Route::put(
-            '/change-password',
-            [AuthController::class, 'changePassword']
-        );
+    Route::put(
+        '/change-password',
+        [AuthController::class, 'changePassword']
+    );
 
-        // ======================
-        // MASTER DATA
-        // ======================
+    // ======================
+    // MASTER DATA
+    // ======================
 
-        Route::apiResource(
-            'children',
-            ChildController::class
-        );
+    Route::apiResource(
+        'children',
+        ChildController::class
+    );
 
-        Route::apiResource(
-            'guardians',
-            GuardianController::class
-        );
+    Route::apiResource(
+        'guardians',
+        GuardianController::class
+    );
 
-        Route::apiResource(
-            'staff',
-            StaffController::class
-        );
+    Route::apiResource(
+        'staff',
+        StaffController::class
+    );
 
-        Route::apiResource(
-            'staff-roles',
-            StaffRoleController::class
-        );
+    Route::apiResource(
+        'staff-roles',
+        StaffRoleController::class
+    );
 
-        Route::apiResource(
-            'schools',
-            SchoolController::class
-        );
+    Route::apiResource(
+        'schools',
+        SchoolController::class
+    );
 
-        Route::apiResource(
-            'school-classes',
-            SchoolClassController::class
-        );
+    Route::apiResource(
+        'school-classes',
+        SchoolClassController::class
+    );
 
-        Route::apiResource(
-            'school-educations',
-            SchoolEducationController::class
-        );
+    Route::apiResource(
+        'school-educations',
+        SchoolEducationController::class
+    );
 
-        Route::apiResource(
-            'clinics',
-            ClinicController::class
-        );
+    Route::apiResource(
+        'clinics',
+        ClinicController::class
+    );
 
-        Route::apiResource(
-            'payers',
-            PayerController::class
-        );
+    Route::apiResource(
+        'payers',
+        PayerController::class
+    );
 
-        Route::apiResource(
-            'programs',
-            ProgramController::class
-        );
+    Route::apiResource(
+        'programs',
+        ProgramController::class
+    );
 
-        Route::patch(
-            'programs/{program}/activate',
-            [ProgramController::class, 'activate']
-        );
+    Route::patch(
+        'programs/{program}/activate',
+        [ProgramController::class, 'activate']
+    );
 
-        Route::patch(
-            'programs/{program}/deactivate',
-            [ProgramController::class, 'deactivate']
-        );
+    Route::patch(
+        'programs/{program}/deactivate',
+        [ProgramController::class, 'deactivate']
+    );
 
-        Route::apiResource(
-            'guardian-roles',
-            GuardianRoleController::class
-        );
+    Route::apiResource(
+        'guardian-roles',
+        GuardianRoleController::class
+    );
 
-        Route::apiResource(
-            'cities',
-            CityController::class
-        );
+    Route::apiResource(
+        'cities',
+        CityController::class
+    );
 
-        Route::apiResource(
-            'rooms',
-            RoomController::class
-        );
+    Route::apiResource(
+        'rooms',
+        RoomController::class
+    );
 
-        // ======================
-        // TRANSACTIONS
-        // ======================
+    // ======================
+    // TRANSACTIONS
+    // ======================
 
-        Route::apiResource(
-            'registrations',
-            RegistrationController::class
-        );
+    Route::apiResource(
+        'registrations',
+        RegistrationController::class
+    );
 
-        Route::post(
-            '/therapy-sessions/generate',
-            [TherapySessionController::class, 'generate']
-        );
+    Route::post(
+        '/therapy-sessions/generate',
+        [TherapySessionController::class, 'generate']
+    );
 
-        Route::get(
-            'therapy-sessions/availability',
-            [TherapySessionController::class, 'availability']
-        );
+    Route::get(
+        'therapy-sessions/availability',
+        [TherapySessionController::class, 'availability']
+    );
 
-        Route::put(
-            'therapy-sessions/{id}/allow-late-activity',
-            [TherapySessionController::class, 'allowLateActivity']
-        );
+    Route::put(
+        'therapy-sessions/{id}/allow-late-activity',
+        [TherapySessionController::class, 'allowLateActivity']
+    );
 
-        Route::patch(
-            'therapy-sessions/{therapySession}/mark-alpha',
-            [TherapySessionController::class, 'markAlpha']
-        );
+    Route::patch(
+        'therapy-sessions/{therapySession}/mark-alpha',
+        [TherapySessionController::class, 'markAlpha']
+    );
 
-        Route::apiResource(
-            'therapy-sessions',
-            TherapySessionController::class
-        );
+    Route::apiResource(
+        'therapy-sessions',
+        TherapySessionController::class
+    );
 
-        Route::apiResource(
-            'activities',
-            ActivityController::class
-        );
+    Route::apiResource(
+        'activities',
+        ActivityController::class
+    );
 
-        Route::post(
-            '/billings/{id}/approve',
-            [BillingController::class, 'approve']
-        );
+    Route::post(
+        '/billings/{id}/approve',
+        [BillingController::class, 'approve']
+    );
 
-        Route::post(
-            '/billings/{id}/reject',
-            [BillingController::class, 'reject']
-        );
+    Route::post(
+        '/billings/{id}/reject',
+        [BillingController::class, 'reject']
+    );
 
-        Route::get(
-            '/billings/{id}/pdf',
-            [BillingController::class, 'downloadPdf']
-        );
+    Route::get(
+        '/billings/{id}/pdf',
+        [BillingController::class, 'downloadPdf']
+    );
 
-        // ======================
-        // REGISTRATION
-        // ======================
+    // ======================
+    // REGISTRATION
+    // ======================
 
-        Route::get(
-            '/registrations/{id}',
-            [RegistrationController::class, 'show']
-        );
+    Route::get(
+        '/registrations/{id}',
+        [RegistrationController::class, 'show']
+    );
 
-        Route::post(
-            '/registrations/{id}/upload-receipt',
-            [RegistrationController::class, 'uploadReceipt']
-        );
+    Route::post(
+        '/registrations/{id}/upload-receipt',
+        [RegistrationController::class, 'uploadReceipt']
+    );
 
-        Route::put(
-            '/registrations/{id}/mark-paid',
-            [RegistrationController::class, 'markPaid']
-        );
+    Route::put(
+        '/registrations/{id}/mark-paid',
+        [RegistrationController::class, 'markPaid']
+    );
 
-        Route::get(
-            '/registration-edit-master-data/{id}',
-            [RegistrationController::class,
-                'editMasterData']
-        );
+    Route::get(
+        '/registration-edit-master-data/{id}',
+        [RegistrationController::class,
+            'editMasterData']
+    );
 
-        Route::post(
-            '/registrations/{id}/generate-billing',
-            [BillingController::class, 'generateBilling']
-        );
+    Route::post(
+        '/registrations/{id}/generate-billing',
+        [BillingController::class, 'generateBilling']
+    );
 
-        Route::get(
-            '/billings/{id}',
-            [BillingController::class, 'show']
-        );
+    Route::get(
+        '/billings/{id}',
+        [BillingController::class, 'show']
+    );
 
-        Route::post(
-            '/billings/{id}/cancel',
-            [BillingController::class, 'cancel']
-        );
+    Route::post(
+        '/billings/{id}/cancel',
+        [BillingController::class, 'cancel']
+    );
 
-        // ======================
-        // ACTIVITY
-        // ======================
+    // ======================
+    // ACTIVITY
+    // ======================
 
-        Route::delete(
-            '/activity-photos/{activityPhoto}',
-            [ActivityPhotoController::class, 'destroy']
-        );
+    Route::delete(
+        '/activity-photos/{activityPhoto}',
+        [ActivityPhotoController::class, 'destroy']
+    );
 
-        Route::delete(
-            '/activities/{activity}/video',
-            [ActivityController::class, 'deleteVideo']
-        );
+    Route::delete(
+        '/activities/{activity}/video',
+        [ActivityController::class, 'deleteVideo']
+    );
 
-        // ======================
-        // CHILD GUARDIANS
-        // ======================
+    // ======================
+    // CHILD GUARDIANS
+    // ======================
 
-        Route::post(
-            '/children/{child}/guardians',
-            [ChildGuardianController::class, 'store']
-        );
+    Route::post(
+        '/children/{child}/guardians',
+        [ChildGuardianController::class, 'store']
+    );
 
-        Route::delete(
-            '/children/{child}/guardians/{guardian}',
-            [ChildGuardianController::class, 'destroy']
-        );
+    Route::delete(
+        '/children/{child}/guardians/{guardian}',
+        [ChildGuardianController::class, 'destroy']
+    );
 
-    });
+});
