@@ -39,10 +39,11 @@ return [
         'http://127.0.0.1:3000',
 
         // ======================
-        // VERCEL FRONTEND
+        // PRODUCTION
         // ======================
 
         'https://aha-cdc.vercel.app',
+        'https://cdc.aha-center.com',
 
     ],
 
