@@ -146,7 +146,7 @@ class ActivityController extends Controller
                 'nullable',
                 'file',
                 'mimetypes:video/mp4,video/quicktime,video/x-msvideo',
-                'max:51200',
+                'max:102400',
             ],
 
             'photos.*' => 'nullable|image|max:5120',
@@ -360,7 +360,7 @@ class ActivityController extends Controller
                 'nullable',
                 'file',
                 'mimetypes:video/mp4,video/quicktime,video/x-msvideo',
-                'max:51200',
+                'max:102400',
             ],
 
             'photos.*' => 'nullable|image|max:5120',
