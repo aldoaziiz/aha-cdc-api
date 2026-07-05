@@ -459,7 +459,7 @@ class ActivityController extends Controller
 
                     'activity_id' => $activity->id,
 
-                    'r2' => $photoPath,
+                    'photo' => $photoPath,
 
                 ]);
             }
