@@ -15,6 +15,7 @@ use App\Http\Controllers\API\PayerController;
 use App\Http\Controllers\API\ProgramController;
 use App\Http\Controllers\API\PublicRegistrationController;
 use App\Http\Controllers\API\RegistrationController;
+use App\Http\Controllers\API\Reports\TherapistReportController;
 use App\Http\Controllers\API\RoomController;
 use App\Http\Controllers\API\SchoolClassController;
 use App\Http\Controllers\API\SchoolController;
@@ -371,6 +372,15 @@ Route::middleware([
     Route::delete(
         '/activities/{activity}/video',
         [ActivityController::class, 'deleteVideo']
+    );
+
+    // ======================
+    // REPORTS
+    // ======================
+
+    Route::get(
+        '/reports/therapists',
+        [TherapistReportController::class, 'index']
     );
 
     // ======================
