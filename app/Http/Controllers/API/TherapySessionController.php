@@ -159,7 +159,7 @@ class TherapySessionController extends Controller
         // SORTING
         // ======================
 
-        $query->orderBy('therapy_date')
+        $query->orderBy('therapy_date', 'desc')
             ->orderBy('start_time');
 
         // ======================
