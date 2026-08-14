@@ -11,18 +11,19 @@ use Illuminate\Support\Facades\Storage;
 
 class ActivityController extends Controller
 {
-    private function forbidGuardian()
+    private function forbidReadOnly()
     {
         if (
-            auth()->user()->role ===
-            'guardian'
+            in_array(
+                auth()->user()->role,
+                ['guardian', 'guest'],
+                true
+            )
         ) {
-
             abort(
                 403,
                 'Forbidden'
             );
-
         }
     }
 
@@ -99,6 +100,25 @@ class ActivityController extends Controller
         }
 
         // ======================
+        // GUEST FILTER
+        // ======================
+
+        if ($user->role === 'guest') {
+
+            $query->whereHas(
+                'therapySession.registration',
+                function ($q) {
+
+                    $q->where(
+                        'payer_id',
+                        1
+                    );
+
+                }
+            );
+        }
+
+        // ======================
         // SEARCH CHILD
         // ======================
 
@@ -126,7 +146,7 @@ class ActivityController extends Controller
 
     public function store(Request $request)
     {
-        $this->forbidGuardian();
+        $this->forbidReadOnly();
 
         // ======================
         // VALIDATION
@@ -258,7 +278,7 @@ class ActivityController extends Controller
 
     public function destroy(Activity $activity)
     {
-        $this->forbidGuardian();
+        $this->forbidReadOnly();
 
         // ======================
         // THERAPIST OWNERSHIP
@@ -331,22 +351,37 @@ class ActivityController extends Controller
 
     public function show(Activity $activity)
     {
+        $user = auth()->user();
+
+        $activity->load([
+            'photos',
+            'therapySession.registration.child',
+            'therapySession.registration.programs',
+            'therapySession.therapist',
+        ]);
+
+        if (
+            $user->role === 'guest' &&
+            (int) $activity
+                ->therapySession
+                ->registration
+                ->payer_id !== 1
+        ) {
+            abort(
+                403,
+                'Forbidden'
+            );
+        }
+
         return response()->json([
-
-            'data' => $activity->load([
-                'photos',
-                'therapySession.registration.child',
-                'therapySession.registration.programs',
-                'therapySession.therapist',
-            ]),
-
+            'data' => $activity,
         ]);
     }
 
     public function update(Request $request, Activity $activity)
     {
 
-        $this->forbidGuardian();
+        $this->forbidReadOnly();
 
         // ======================
         // VALIDATION
@@ -491,7 +526,7 @@ class ActivityController extends Controller
     public function deleteVideo(Activity $activity)
     {
 
-        $this->forbidGuardian();
+        $this->forbidReadOnly();
 
         // ======================
         // THERAPIST OWNERSHIP

@@ -147,20 +147,140 @@ class TherapySessionController extends Controller
         }
 
         // ======================
-        // WITHOUT ACTIVITY
+        // WITHOUT ACTIVITY or STATUS ALPHA
         // ======================
 
         if ($request->without_activity) {
 
-            $query->whereDoesntHave('activity');
+            $query
+                ->whereDoesntHave('activity')
+                ->where(
+                    'therapy_session_status_id',
+                    '!=',
+                    3
+                );
         }
 
         // ======================
         // SORTING
         // ======================
 
-        $query->orderBy('therapy_date', 'desc')
-            ->orderBy('start_time');
+        $sortBy = $request->sort_by ?? 'therapy_date';
+
+        $sortOrder =
+            $request->sort_order === 'desc'
+                ? 'desc'
+                : 'asc';
+
+        switch ($sortBy) {
+
+            case 'registration_number':
+
+                $query
+                    ->leftJoin(
+                        'registrations as sort_r',
+                        'sort_r.id',
+                        '=',
+                        'therapy_sessions.registration_id'
+                    )
+                    ->orderBy(
+                        'sort_r.registration_number',
+                        $sortOrder
+                    );
+
+                break;
+
+            case 'child':
+
+                $query
+                    ->leftJoin(
+                        'registrations as sort_r',
+                        'sort_r.id',
+                        '=',
+                        'therapy_sessions.registration_id'
+                    )
+                    ->leftJoin(
+                        'children as sort_c',
+                        'sort_c.id',
+                        '=',
+                        'sort_r.child_id'
+                    )
+                    ->orderBy(
+                        'sort_c.name',
+                        $sortOrder
+                    );
+
+                break;
+
+            case 'therapist':
+
+                $query
+                    ->leftJoin(
+                        'staff as sort_s',
+                        'sort_s.id',
+                        '=',
+                        'therapy_sessions.therapist_id'
+                    )
+                    ->orderBy(
+                        'sort_s.name',
+                        $sortOrder
+                    );
+
+                break;
+
+            case 'status':
+
+                $query
+                    ->leftJoin(
+                        'therapy_session_statuses as sort_tss',
+                        'sort_tss.id',
+                        '=',
+                        'therapy_sessions.therapy_session_status_id'
+                    )
+                    ->orderBy(
+                        'sort_tss.name',
+                        $sortOrder
+                    );
+
+                break;
+
+            case 'time':
+
+                $query->orderBy(
+                    'therapy_sessions.start_time',
+                    $sortOrder
+                );
+
+                break;
+
+            case 'notes':
+
+                $query->orderBy(
+                    'therapy_sessions.notes',
+                    $sortOrder
+                );
+
+                break;
+
+            case 'therapy_date':
+            default:
+
+                $query
+                    ->orderBy(
+                        'therapy_sessions.therapy_date',
+                        $sortOrder
+                    )
+                    ->orderBy(
+                        'therapy_sessions.start_time',
+                        'asc'
+                    );
+
+                break;
+        }
+
+        // Karena beberapa sorting memakai JOIN,
+        // pastikan response tetap hanya kolom therapy_sessions.
+        $query->select('therapy_sessions.*');
 
         // ======================
         // PAGINATION

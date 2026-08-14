@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckDailySession;
+use App\Http\Middleware\RestrictGuestApiAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'daily.session' => CheckDailySession::class,
+            'guest.api' => RestrictGuestApiAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

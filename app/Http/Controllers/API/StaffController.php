@@ -131,6 +131,15 @@ class StaffController extends Controller
                 $role = 'admin';
 
             }
+
+            if (
+                str_contains(
+                    $staffRoleName,
+                    'guest'
+                )
+            ) {
+                $role = 'guest';
+            }
         }
 
         // ======================
@@ -263,6 +272,15 @@ class StaffController extends Controller
 
             $role = 'admin';
 
+        }
+
+        if (
+            str_contains(
+                $staffRoleName,
+                'guest'
+            )
+        ) {
+            $role = 'guest';
         }
 
         if ($staff->user_id) {

@@ -160,6 +160,7 @@ Route::post(
 Route::middleware([
     'auth:sanctum',
     'daily.session',
+    'guest.api',
 ])->group(function () {
 
     // ======================

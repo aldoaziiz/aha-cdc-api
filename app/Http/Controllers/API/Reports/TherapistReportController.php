@@ -14,9 +14,28 @@ class TherapistReportController extends Controller
         // AUTHORIZATION
         // ======================
 
-        if ($request->user()?->role !== 'admin') {
+        $user = $request->user();
+
+        if (! in_array($user?->role, ['admin', 'guest', 'therapist'], true)) {
             return response()->json([
                 'message' => 'Forbidden',
+            ], 403);
+        }
+
+        $isGuest = $user->role === 'guest';
+
+        $isTherapist = $user->role === 'therapist';
+
+        $currentTherapistId = $isTherapist
+            ? $user->staff?->id
+            : null;
+
+        if (
+            $isTherapist &&
+            ! $currentTherapistId
+        ) {
+            return response()->json([
+                'message' => 'Therapist staff data not found.',
             ], 403);
         }
 
@@ -29,6 +48,7 @@ class TherapistReportController extends Controller
             'year' => 'nullable|integer|min:2000|max:2100',
 
             'therapist_id' => 'nullable|integer|exists:staff,id',
+            'child_id' => 'nullable|integer|exists:children,id',
 
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|in:10,25,50,100',
@@ -44,7 +64,11 @@ class TherapistReportController extends Controller
         $month = $validated['month'] ?? now()->month;
         $year = $validated['year'] ?? now()->year;
 
-        $therapistId = $validated['therapist_id'] ?? null;
+        $therapistId = $isTherapist
+            ? $currentTherapistId
+            : ($validated['therapist_id'] ?? null);
+
+        $childId = $validated['child_id'] ?? null;
 
         $perPage = $validated['per_page'] ?? 10;
 
@@ -80,8 +104,31 @@ class TherapistReportController extends Controller
                 '=',
                 'ts.therapy_session_status_id'
             )
-            ->whereMonth('ts.therapy_date', $month)
-            ->whereYear('ts.therapy_date', $year);
+            ->leftJoin(
+                'activities as a',
+                'a.therapy_session_id',
+                '=',
+                'ts.id'
+            )
+            ->whereMonth(
+                'ts.therapy_date',
+                $month
+            )
+            ->whereYear(
+                'ts.therapy_date',
+                $year
+            );
+
+        // ======================
+        // GUEST SCOPE
+        // ======================
+
+        if ($isGuest) {
+            $baseQuery->where(
+                'r.payer_id',
+                1
+            );
+        }
 
         // ======================
         // THERAPIST FILTER
@@ -91,6 +138,17 @@ class TherapistReportController extends Controller
             $baseQuery->where(
                 'ts.therapist_id',
                 $therapistId
+            );
+        }
+
+        // ======================
+        // CHILD FILTER
+        // ======================
+
+        if ($childId) {
+            $baseQuery->where(
+                'r.child_id',
+                $childId
             );
         }
 
@@ -149,21 +207,29 @@ class TherapistReportController extends Controller
         $sessionsQuery = (clone $baseQuery)
             ->select([
                 'ts.id',
+                'ts.registration_id',
+
                 'r.registration_number',
+
                 'c.name as child_name',
+
                 's.name as therapist_name',
+
                 'ts.therapy_date',
                 'ts.start_time',
                 'ts.end_time',
+
                 'tss.name as status',
+
+                'a.id as activity_id',
+                'a.caption as activity_caption',
+                'a.video as activity_video',
             ])
             ->orderBy(
                 $sortColumn,
                 $sortOrder
             );
 
-        // Kalau sort berdasarkan tanggal,
-        // urutkan session pada hari yang sama berdasarkan jam.
         if ($sortBy === 'therapy_date') {
             $sessionsQuery->orderBy(
                 'ts.start_time',
@@ -171,7 +237,7 @@ class TherapistReportController extends Controller
             );
         }
 
-        // deterministic ordering untuk pagination
+        // deterministic ordering
         $sessionsQuery->orderBy(
             'ts.id',
             'asc'
@@ -181,23 +247,273 @@ class TherapistReportController extends Controller
             ->paginate($perPage);
 
         // ======================
+        // PROGRAMS
+        // ======================
+
+        $registrationIds = $sessions
+            ->getCollection()
+            ->pluck('registration_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $programsByRegistration = collect();
+
+        if ($registrationIds->isNotEmpty()) {
+            $programsByRegistration = DB::table('registration_programs as rp')
+                ->join(
+                    'programs as p',
+                    'p.id',
+                    '=',
+                    'rp.program_id'
+                )
+                ->leftJoin(
+                    'program_categories as pc',
+                    'pc.id',
+                    '=',
+                    'p.program_category_id'
+                )
+                ->whereIn(
+                    'rp.registration_id',
+                    $registrationIds
+                )
+                ->orderBy(
+                    'p.name',
+                    'asc'
+                )
+                ->get([
+                    'rp.registration_id',
+
+                    'p.id as program_id',
+                    'p.name as program_name',
+
+                    'pc.id as program_category_id',
+                    'pc.name as program_category_name',
+                ])
+                ->groupBy(
+                    'registration_id'
+                );
+        }
+
+        // ======================
+        // ACTIVITY PHOTOS
+        // ======================
+
+        $activityIds = $sessions
+            ->getCollection()
+            ->pluck('activity_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $photosByActivity = collect();
+
+        if ($activityIds->isNotEmpty()) {
+            $photosByActivity = DB::table('activity_photos')
+                ->whereIn(
+                    'activity_id',
+                    $activityIds
+                )
+                ->orderBy(
+                    'id',
+                    'asc'
+                )
+                ->get([
+                    'id',
+                    'activity_id',
+                    'photo',
+                ])
+                ->groupBy(
+                    'activity_id'
+                );
+        }
+
+        // ======================
+        // BUILD SESSION DETAILS
+        // ======================
+
+        $sessions->getCollection()->transform(
+            function ($session) use (
+                $programsByRegistration,
+                $photosByActivity
+            ) {
+                $registrationPrograms = $programsByRegistration
+                    ->get(
+                        $session->registration_id,
+                        collect()
+                    );
+
+                // ======================
+                // PROGRAM CATEGORIES
+                // ======================
+
+                $session->program_categories = $registrationPrograms
+                    ->filter(function ($program) {
+                        return $program->program_category_id;
+                    })
+                    ->map(function ($program) {
+                        return [
+                            'id' => $program->program_category_id,
+                            'name' => $program->program_category_name,
+                        ];
+                    })
+                    ->unique('id')
+                    ->values();
+
+                // ======================
+                // PROGRAMS
+                // ======================
+
+                $session->programs = $registrationPrograms
+                    ->map(function ($program) {
+                        return [
+                            'id' => $program->program_id,
+                            'name' => $program->program_name,
+                        ];
+                    })
+                    ->values();
+
+                // ======================
+                // ACTIVITY
+                // ======================
+
+                if ($session->activity_id) {
+                    $photos = $photosByActivity
+                        ->get(
+                            $session->activity_id,
+                            collect()
+                        )
+                        ->map(function ($photo) {
+                            return [
+                                'id' => $photo->id,
+                                'photo' => $photo->photo,
+                            ];
+                        })
+                        ->values();
+
+                    $session->activity = [
+                        'id' => $session->activity_id,
+                        'caption' => $session->activity_caption,
+                        'video' => $session->activity_video,
+                        'photos' => $photos,
+                    ];
+                } else {
+                    $session->activity = null;
+                }
+
+                // field internal tidak perlu dikirim
+                unset(
+                    $session->activity_id,
+                    $session->activity_caption,
+                    $session->activity_video
+                );
+
+                return $session;
+            }
+        );
+
+        // ======================
         // THERAPISTS
         // ======================
 
-        $therapists = DB::table('staff')
+        $therapistsQuery = DB::table('staff as s')
             ->where(
-                'staff_role_id',
+                's.staff_role_id',
                 2
-            )
+            );
+
+        if ($isGuest) {
+            $therapistsQuery
+                ->join(
+                    'therapy_sessions as ts',
+                    'ts.therapist_id',
+                    '=',
+                    's.id'
+                )
+                ->join(
+                    'registrations as r',
+                    'r.id',
+                    '=',
+                    'ts.registration_id'
+                )
+                ->where(
+                    'r.payer_id',
+                    1
+                );
+        }
+
+        if ($isTherapist) {
+            $therapistsQuery->where(
+                's.id',
+                $currentTherapistId
+            );
+        }
+
+        $therapists = $therapistsQuery
+            ->select([
+                's.id',
+                's.name',
+                's.status_id',
+            ])
+            ->distinct()
             ->orderBy(
-                'name',
+                's.name',
                 'asc'
             )
-            ->get([
-                'id',
-                'name',
-                'status_id',
-            ]);
+            ->get();
+
+        // ======================
+        // CHILDREN
+        // ======================
+
+        $childrenQuery = DB::table('children as c');
+
+        if ($isGuest) {
+            $childrenQuery
+                ->join(
+                    'registrations as r',
+                    'r.child_id',
+                    '=',
+                    'c.id'
+                )
+                ->where(
+                    'r.payer_id',
+                    1
+                );
+        }
+
+        if ($isTherapist) {
+            $childrenQuery
+                ->join(
+                    'registrations as r',
+                    'r.child_id',
+                    '=',
+                    'c.id'
+                )
+                ->join(
+                    'therapy_sessions as ts',
+                    'ts.registration_id',
+                    '=',
+                    'r.id'
+                )
+                ->where(
+                    'ts.therapist_id',
+                    $currentTherapistId
+                );
+        }
+
+        $children = $childrenQuery
+            ->select([
+                'c.id',
+                'c.name',
+                'c.status_id',
+            ])
+            ->distinct()
+            ->orderBy(
+                'c.name',
+                'asc'
+            )
+            ->get();
 
         // ======================
         // RESPONSE
@@ -208,9 +524,11 @@ class TherapistReportController extends Controller
                 'month' => $month,
                 'year' => $year,
                 'therapist_id' => $therapistId,
+                'child_id' => $childId,
             ],
 
             'therapists' => $therapists,
+            'children' => $children,
 
             'summary' => [
                 'total_sessions' => (int) ($summary->total_sessions ?? 0),
