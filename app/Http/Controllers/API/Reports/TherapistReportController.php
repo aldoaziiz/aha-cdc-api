@@ -224,6 +224,7 @@ class TherapistReportController extends Controller
                 'a.id as activity_id',
                 'a.caption as activity_caption',
                 'a.video as activity_video',
+                'a.document as activity_document',
             ])
             ->orderBy(
                 $sortColumn,
@@ -329,13 +330,48 @@ class TherapistReportController extends Controller
         }
 
         // ======================
+        // ACTIVITY ACTION TYPES
+        // ======================
+
+        $actionTypesByActivity = collect();
+
+        if ($activityIds->isNotEmpty()) {
+            $actionTypesByActivity = DB::table(
+                'activity_action_assignments as aaa'
+            )
+                ->join(
+                    'activity_action_types as aat',
+                    'aat.id',
+                    '=',
+                    'aaa.activity_action_type_id'
+                )
+                ->whereIn(
+                    'aaa.activity_id',
+                    $activityIds
+                )
+                ->orderBy(
+                    'aat.id',
+                    'asc'
+                )
+                ->get([
+                    'aaa.activity_id',
+                    'aat.id',
+                    'aat.name',
+                ])
+                ->groupBy(
+                    'activity_id'
+                );
+        }
+
+        // ======================
         // BUILD SESSION DETAILS
         // ======================
 
         $sessions->getCollection()->transform(
             function ($session) use (
                 $programsByRegistration,
-                $photosByActivity
+                $photosByActivity,
+                $actionTypesByActivity
             ) {
                 $registrationPrograms = $programsByRegistration
                     ->get(
@@ -391,10 +427,25 @@ class TherapistReportController extends Controller
                         })
                         ->values();
 
+                    $actionTypes = $actionTypesByActivity
+                        ->get(
+                            $session->activity_id,
+                            collect()
+                        )
+                        ->map(function ($actionType) {
+                            return [
+                                'id' => $actionType->id,
+                                'name' => $actionType->name,
+                            ];
+                        })
+                        ->values();
+
                     $session->activity = [
                         'id' => $session->activity_id,
                         'caption' => $session->activity_caption,
                         'video' => $session->activity_video,
+                        'document' => $session->activity_document,
+                        'action_types' => $actionTypes,
                         'photos' => $photos,
                     ];
                 } else {
@@ -405,7 +456,8 @@ class TherapistReportController extends Controller
                 unset(
                     $session->activity_id,
                     $session->activity_caption,
-                    $session->activity_video
+                    $session->activity_video,
+                    $session->activity_document
                 );
 
                 return $session;
