@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\ActivityActionTypeController;
 use App\Http\Controllers\API\ActivityController;
 use App\Http\Controllers\API\ActivityPhotoController;
 use App\Http\Controllers\API\AuthController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\API\PayerController;
 use App\Http\Controllers\API\ProgramController;
 use App\Http\Controllers\API\PublicRegistrationController;
 use App\Http\Controllers\API\RegistrationController;
+use App\Http\Controllers\API\Reports\ActivitySummaryReportController;
 use App\Http\Controllers\API\Reports\TherapistReportController;
 use App\Http\Controllers\API\RoomController;
 use App\Http\Controllers\API\SchoolClassController;
@@ -364,6 +366,10 @@ Route::middleware([
     // ======================
     // ACTIVITY
     // ======================
+    Route::get(
+        '/activity-action-types',
+        [ActivityActionTypeController::class, 'index']
+    );
 
     Route::delete(
         '/activity-photos/{activityPhoto}',
@@ -382,6 +388,14 @@ Route::middleware([
     Route::get(
         '/reports/therapists',
         [TherapistReportController::class, 'index']
+    );
+
+    Route::get(
+        '/reports/activity-summary',
+        [
+            ActivitySummaryReportController::class,
+            'index',
+        ]
     );
 
     // ======================

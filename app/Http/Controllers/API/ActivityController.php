@@ -14,9 +14,9 @@ class ActivityController extends Controller
     private function forbidReadOnly()
     {
         if (
-            in_array(
+            ! in_array(
                 auth()->user()->role,
-                ['guardian', 'guest'],
+                ['admin', 'therapist'],
                 true
             )
         ) {
@@ -33,6 +33,7 @@ class ActivityController extends Controller
 
         $query = Activity::with([
             'photos',
+            'actionTypes',
             'therapySession.registration.child',
             'therapySession.registration.programs',
             'therapySession.therapist',
@@ -162,6 +163,24 @@ class ActivityController extends Controller
 
             'caption' => 'nullable|string',
 
+            'action_type_ids' => [
+                'nullable',
+                'array',
+            ],
+
+            'action_type_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:activity_action_types,id',
+            ],
+
+            'document' => [
+                'nullable',
+                'file',
+                'mimes:pdf',
+                'max:10240',
+            ],
+
             'video' => [
                 'nullable',
                 'file',
@@ -181,6 +200,21 @@ class ActivityController extends Controller
             $request->therapy_session_id
         );
 
+        // ======================
+        // THERAPIST OWNERSHIP
+        // ======================
+
+        if (
+            auth()->user()->role === 'therapist' &&
+            (int) $therapySession->therapist_id !==
+            (int) auth()->user()->staff->id
+        ) {
+            abort(
+                403,
+                'Forbidden'
+            );
+        }
+
         if ($therapySession->therapy_session_status_id === 3) {
 
             return response()->json([
@@ -195,11 +229,13 @@ class ActivityController extends Controller
         if (
             ! $request->caption &&
             ! $request->hasFile('video') &&
-            ! $request->hasFile('photos')
+            ! $request->hasFile('photos') &&
+            ! $request->hasFile('document') &&
+            empty($request->action_type_ids)
         ) {
 
             return response()->json([
-                'message' => 'Caption, photo, or video is required.',
+                'message' => 'Activity content is required.',
             ], 422);
         }
 
@@ -219,6 +255,21 @@ class ActivityController extends Controller
         }
 
         // ======================
+        // UPLOAD DOCUMENT
+        // ======================
+
+        $documentPath = null;
+
+        if ($request->hasFile('document')) {
+
+            $documentPath = $request
+                ->file('document')
+                ->store(
+                    'documents'
+                );
+        }
+
+        // ======================
         // CREATE ACTIVITY
         // ======================
 
@@ -230,7 +281,19 @@ class ActivityController extends Controller
 
             'video' => $videoPath,
 
+            'document' => $documentPath,
+
         ]);
+
+        // ======================
+        // ACTION TYPES
+        // ======================
+
+        $activity
+            ->actionTypes()
+            ->sync(
+                $request->action_type_ids ?? []
+            );
 
         $activity->therapySession()->update([
             'therapy_session_status_id' => 2,
@@ -269,6 +332,7 @@ class ActivityController extends Controller
 
             'data' => $activity->load([
                 'photos',
+                'actionTypes',
                 'therapySession.registration.child',
                 'therapySession.registration.programs',
                 'therapySession.therapist',
@@ -331,6 +395,17 @@ class ActivityController extends Controller
         }
 
         // ======================
+        // DELETE DOCUMENT
+        // ======================
+
+        if ($activity->document) {
+
+            Storage::delete(
+                $activity->document
+            );
+        }
+
+        // ======================
         // UPDATE SESSION STATUS
         // ======================
 
@@ -355,6 +430,7 @@ class ActivityController extends Controller
 
         $activity->load([
             'photos',
+            'actionTypes',
             'therapySession.registration.child',
             'therapySession.registration.programs',
             'therapySession.therapist',
@@ -390,6 +466,24 @@ class ActivityController extends Controller
         $request->validate([
 
             'caption' => 'nullable|string',
+
+            'action_type_ids' => [
+                'nullable',
+                'array',
+            ],
+
+            'action_type_ids.*' => [
+                'integer',
+                'distinct',
+                'exists:activity_action_types,id',
+            ],
+
+            'document' => [
+                'nullable',
+                'file',
+                'mimes:pdf',
+                'max:10240',
+            ],
 
             'video' => [
                 'nullable',
@@ -465,6 +559,32 @@ class ActivityController extends Controller
         }
 
         // ======================
+        // UPDATE DOCUMENT
+        // ======================
+
+        $documentPath = $activity->document;
+
+        if ($request->hasFile('document')) {
+
+            // DELETE OLD DOCUMENT
+
+            if ($activity->document) {
+
+                Storage::delete(
+                    $activity->document
+                );
+            }
+
+            // STORE NEW DOCUMENT
+
+            $documentPath = $request
+                ->file('document')
+                ->store(
+                    'documents'
+                );
+        }
+
+        // ======================
         // UPDATE ACTIVITY
         // ======================
 
@@ -474,7 +594,19 @@ class ActivityController extends Controller
 
             'video' => $videoPath,
 
+            'document' => $documentPath,
+
         ]);
+
+        // ======================
+        // UPDATE ACTION TYPES
+        // ======================
+
+        $activity
+            ->actionTypes()
+            ->sync(
+                $request->action_type_ids ?? []
+            );
 
         // ======================
         // ADD NEW PHOTOS
@@ -511,6 +643,8 @@ class ActivityController extends Controller
             'data' => $activity->load([
 
                 'photos',
+
+                'actionTypes',
 
                 'therapySession.registration.child',
 

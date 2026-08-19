@@ -10,6 +10,7 @@ class Activity extends Model
         'therapy_session_id',
         'caption',
         'video',
+        'document',
     ];
 
     // ======================
@@ -28,5 +29,15 @@ class Activity extends Model
         return $this->hasMany(
             ActivityPhoto::class
         );
+    }
+
+    public function actionTypes()
+    {
+        return $this->belongsToMany(
+            ActivityActionType::class,
+            'activity_action_assignments',
+            'activity_id',
+            'activity_action_type_id'
+        )->withTimestamps();
     }
 }
