@@ -17,6 +17,7 @@ use App\Http\Controllers\API\ProgramController;
 use App\Http\Controllers\API\PublicRegistrationController;
 use App\Http\Controllers\API\RegistrationController;
 use App\Http\Controllers\API\Reports\ActivitySummaryReportController;
+use App\Http\Controllers\API\Reports\BillingReportController;
 use App\Http\Controllers\API\Reports\TherapistReportController;
 use App\Http\Controllers\API\RoomController;
 use App\Http\Controllers\API\SchoolClassController;
@@ -354,6 +355,16 @@ Route::middleware([
     );
 
     Route::get(
+        '/billings/eligible-registrations',
+        [BillingController::class, 'eligibleRegistrations']
+    );
+
+    Route::post(
+        '/billings/generate-combined',
+        [BillingController::class, 'generateCombined']
+    );
+
+    Route::get(
         '/billings/{id}',
         [BillingController::class, 'show']
     );
@@ -396,6 +407,11 @@ Route::middleware([
             ActivitySummaryReportController::class,
             'index',
         ]
+    );
+
+    Route::get(
+        '/reports/billing',
+        [BillingReportController::class, 'index']
     );
 
     // ======================

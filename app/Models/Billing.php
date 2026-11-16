@@ -21,6 +21,11 @@ class Billing extends Model
         return $this->belongsTo(Registration::class);
     }
 
+    public function registrations()
+    {
+        return $this->hasMany(Registration::class);
+    }
+
     public function items()
     {
         return $this->hasMany(BillingItem::class);

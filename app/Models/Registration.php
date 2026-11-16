@@ -10,6 +10,7 @@ class Registration extends Model
         'registration_number',
         'child_id',
         'clinic_id',
+        'billing_id',
         'complaint',
         'program_id',
         'payer_id',
@@ -57,6 +58,6 @@ class Registration extends Model
 
     public function billing()
     {
-        return $this->hasOne(Billing::class);
+        return $this->belongsTo(Billing::class);
     }
 }

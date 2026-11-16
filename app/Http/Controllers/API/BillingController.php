@@ -54,6 +54,12 @@ class BillingController extends Controller
 
             'registration.payer',
 
+            'registrations.child',
+
+            'registrations.payer',
+
+            'items.registration',
+
             'paymentStatus',
 
         ])->findOrFail($id);
@@ -139,6 +145,8 @@ class BillingController extends Controller
 
             ]);
 
+            $registration->update(['billing_id' => $billing->id]);
+
             // ======================
             // CREATE BILLING ITEMS
             // ======================
@@ -155,6 +163,8 @@ class BillingController extends Controller
                 BillingItem::create([
 
                     'billing_id' => $billing->id,
+
+                    'registration_id' => $registration->id,
 
                     'program_id' => $item->program_id,
 
@@ -188,6 +198,91 @@ class BillingController extends Controller
                 'data' => $billing->fresh(),
 
             ]);
+        });
+    }
+
+    public function eligibleRegistrations(Request $request)
+    {
+        $this->forbidNonAdmin();
+
+        $query = Registration::with(['child:id,name', 'payer:id,name', 'clinic:id,name', 'programs:id,name'])
+            ->whereNull('billing_id')
+            ->whereHas('registrationPrograms')
+            ->when($request->search, function ($query, $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('registration_number', 'like', '%'.$search.'%')
+                        ->orWhereHas('child', fn ($child) => $child->where('name', 'like', '%'.$search.'%'));
+                });
+            })
+            ->latest();
+
+        return response()->json($query->paginate($request->integer('per_page', 10)));
+    }
+
+    public function generateCombined(Request $request)
+    {
+        $this->forbidNonAdmin();
+
+        $validated = $request->validate([
+            'registration_ids' => 'required|array|min:2',
+            'registration_ids.*' => 'required|integer|distinct|exists:registrations,id',
+        ]);
+
+        return DB::transaction(function () use ($validated) {
+            $registrations = Registration::with('registrationPrograms.program')
+                ->whereIn('id', $validated['registration_ids'])
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($registrations->count() !== count($validated['registration_ids'])) {
+                return response()->json(['message' => 'Some registrations could not be found.'], 422);
+            }
+
+            if ($registrations->contains(fn ($registration) => $registration->billing_id || $registration->registrationPrograms->isEmpty())) {
+                return response()->json(['message' => 'All selected registrations must be unbilled and have programs.'], 422);
+            }
+
+            if ($registrations->pluck('clinic_id')->unique()->count() !== 1 || $registrations->pluck('payer_id')->unique()->count() !== 1) {
+                return response()->json(['message' => 'Selected registrations must have the same clinic and payer.'], 422);
+            }
+
+            $today = now()->format('Ymd');
+            $count = Billing::whereDate('created_at', today())->count() + 1;
+            $invoiceNumber = 'INV-'.$today.'-'.str_pad($count, 4, '0', STR_PAD_LEFT);
+            $billing = Billing::create([
+                'registration_id' => $registrations->first()->id,
+                'invoice_number' => $invoiceNumber,
+                'invoice_token' => Str::uuid(),
+                'payment_status_id' => 1,
+                'total_amount' => 0,
+            ]);
+
+            $total = 0;
+            foreach ($registrations as $registration) {
+                $registration->update(['billing_id' => $billing->id]);
+
+                foreach ($registration->registrationPrograms as $programItem) {
+                    $subtotal = $programItem->price;
+                    BillingItem::create([
+                        'billing_id' => $billing->id,
+                        'registration_id' => $registration->id,
+                        'program_id' => $programItem->program_id,
+                        'description' => $programItem->program?->name ?? '-',
+                        'price' => $programItem->price,
+                        'quantity' => 1,
+                        'subtotal' => $subtotal,
+                    ]);
+                    $total += $subtotal;
+                }
+            }
+
+            $billing->update(['total_amount' => $total]);
+
+            return response()->json([
+                'message' => 'Combined billing generated successfully.',
+                'data' => $billing->load(['items.registration', 'registrations.child', 'registrations.payer', 'paymentStatus']),
+            ], 201);
         });
     }
 
@@ -226,6 +321,12 @@ class BillingController extends Controller
             'registration.child',
 
             'registration.payer',
+
+            'registrations.child',
+
+            'registrations.payer',
+
+            'items.registration',
 
             'paymentStatus',
 
@@ -396,6 +497,12 @@ class BillingController extends Controller
             'items',
             'registration.child',
             'registration.payer',
+
+            'registrations.child',
+
+            'registrations.payer',
+
+            'items.registration',
             'paymentStatus',
         ])->findOrFail($id);
 

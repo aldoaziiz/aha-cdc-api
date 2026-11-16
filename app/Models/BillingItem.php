@@ -8,6 +8,7 @@ class BillingItem extends Model
 {
     protected $fillable = [
         'billing_id',
+        'registration_id',
         'program_id',
         'description',
         'price',
@@ -23,5 +24,10 @@ class BillingItem extends Model
     public function program()
     {
         return $this->belongsTo(Program::class);
+    }
+
+    public function registration()
+    {
+        return $this->belongsTo(Registration::class);
     }
 }

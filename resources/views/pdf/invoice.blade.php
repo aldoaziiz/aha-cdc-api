@@ -261,12 +261,14 @@ th {
 
             <p>
                 <strong>Registration No</strong><br>
-                {{ $billing->registration->registration_number }}
+                @foreach($billing->registrations as $registration)
+                    {{ $registration->registration_number }}{{ !$loop->last ? ', ' : '' }}
+                @endforeach
             </p>
 
             <p>
                 <strong>Child Name</strong><br>
-                {{ $billing->registration->child->name }}
+                {{ $billing->registrations->pluck('child.name')->unique()->implode(', ') }}
             </p>
 
             <p>
@@ -331,6 +333,9 @@ th {
     </td>
 
     <td>
+        @if($billing->registrations->count() > 1)
+            <small>{{ $item->registration?->registration_number }} — </small>
+        @endif
         {{ $item->description }}
     </td>
 

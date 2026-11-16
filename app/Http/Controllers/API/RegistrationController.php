@@ -70,9 +70,9 @@ class RegistrationController extends Controller
 
         $query->leftJoin(
             'billings',
-            'registrations.id',
+            'registrations.billing_id',
             '=',
-            'billings.registration_id'
+            'billings.id'
         );
 
         $query->select('registrations.*');
