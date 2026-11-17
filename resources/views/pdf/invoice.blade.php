@@ -196,6 +196,42 @@ th {
 	font-style: italic;
 }
 
+.payment-terms {
+	width: 100%;
+	margin-top: 28px;
+	border: 1px solid #d9e2f3;
+	background: #f2f6fc;
+	border-collapse: collapse;
+}
+
+.payment-terms td {
+	width: 50%;
+	border: none;
+	vertical-align: top;
+	padding: 12px;
+	font-size: 10px;
+}
+
+.payment-terms-title {
+	font-weight: bold;
+	color: #2F5597;
+	margin-bottom: 8px;
+}
+
+.payment-terms ol {
+	margin: 0;
+	padding-left: 18px;
+}
+
+.payment-terms li {
+	margin-bottom: 4px;
+}
+
+.contact-note {
+	border-top: 1px solid #d9e2f3 !important;
+	color: #2F5597;
+}
+
 </style>
 
 </head>
@@ -309,15 +345,19 @@ th {
         <thead>
 <tr>
 
-    <th width="8%">No</th>
+    <th width="6%">No</th>
 
-    <th>Description</th>
+    <th width="30%">Description</th>
 
-    <th width="12%">Qty</th>
+    <th width="7%">Qty</th>
 
-    <th width="20%">Unit Price</th>
+    <th width="14%">Unit Price</th>
 
-    <th width="22%">Subtotal</th>
+    <th width="15%">Subtotal</th>
+
+    <th width="14%">Discount</th>
+
+    <th width="14%">Total</th>
 
 </tr>
 </thead>
@@ -351,6 +391,18 @@ th {
         Rp {{ number_format($item->subtotal,0,',','.') }}
     </td>
 
+    <td class="right">
+        @if((float) ($item->discount_amount ?? 0) > 0)
+            - Rp {{ number_format($item->discount_amount,0,',','.') }}
+        @else
+            -
+        @endif
+    </td>
+
+    <td class="right">
+        Rp {{ number_format($item->subtotal - (float) ($item->discount_amount ?? 0),0,',','.') }}
+    </td>
+
 </tr>
 
 @endforeach
@@ -366,7 +418,7 @@ th {
         </td>
 
         <td class="summary-value">
-            Rp {{ number_format($billing->total_amount, 0, ',', '.') }}
+            Rp {{ number_format($billing->items->sum('subtotal'), 0, ',', '.') }}
         </td>
     </tr>
 
@@ -376,7 +428,11 @@ th {
         </td>
 
         <td class="summary-value">
-            -
+            @if($billing->items->sum('discount_amount') > 0)
+                - Rp {{ number_format($billing->items->sum('discount_amount'), 0, ',', '.') }}
+            @else
+                -
+            @endif
         </td>
     </tr>
 
@@ -392,6 +448,29 @@ th {
 
     </tr>
 
+</table>
+
+<table class="payment-terms">
+    <tr>
+        <td>
+            <div class="payment-terms-title">Informasi Pembayaran</div>
+            <strong>Bank:</strong> BSI<br>
+            <strong>No. Rekening:</strong> 7359174696<br>
+            <strong>Atas Nama:</strong> FAKIH NUR HUDA
+        </td>
+        <td>
+            <div class="payment-terms-title">Syarat dan Ketentuan</div>
+            <ol>
+                <li>Masa berlaku biaya registrasi adalah 1 (satu) tahun terhitung sejak tanggal registrasi.</li>
+                <li>Pembayaran dilakukan melalui rekening BSI yang tercantum pada bagian Informasi Pembayaran.</li>
+            </ol>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" class="contact-note">
+            Jika Ayah/Bunda memiliki pertanyaan, silakan hubungi kami melalui WhatsApp. Kami dengan senang hati siap membantu. Terima kasih atas kepercayaan Ayah/Bunda kepada AHA! Child Development Center.
+        </td>
+    </tr>
 </table>
 
 <div class="footer">

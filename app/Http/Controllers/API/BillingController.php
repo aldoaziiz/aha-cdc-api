@@ -4,13 +4,12 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Billing;
-use App\Models\BillingItem;
 use App\Models\Registration;
+use App\Services\BillingGenerationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class BillingController extends Controller
 {
@@ -71,134 +70,29 @@ class BillingController extends Controller
         ]);
     }
 
-    public function generateBilling($id)
+    public function previewGeneration($id, BillingGenerationService $billingGenerationService)
     {
         $this->forbidNonAdmin();
 
-        return DB::transaction(function () use ($id) {
+        return response()->json([
+            'data' => $billingGenerationService->previewSingle((int) $id),
+        ]);
+    }
 
-            $registration = Registration::with([
-                'billing',
-                'registrationPrograms.program',
-            ])->findOrFail($id);
+    public function generateBilling(Request $request, $id, BillingGenerationService $billingGenerationService)
+    {
+        $this->forbidNonAdmin();
 
-            // ======================
-            // ALREADY HAS BILLING
-            // ======================
+        $validated = $request->validate($this->discountValidationRules());
+        $billing = $billingGenerationService->generateSingle(
+            (int) $id,
+            $validated['discounts'] ?? []
+        );
 
-            if ($registration->billing) {
-
-                return response()->json([
-                    'message' => 'Billing already exists.',
-                ], 422);
-            }
-
-            // ======================
-            // MUST HAVE PROGRAMS
-            // ======================
-
-            if ($registration->registrationPrograms->isEmpty()) {
-
-                return response()->json([
-                    'message' => 'No registration programs found.',
-                ], 422);
-            }
-
-            // ======================
-            // GENERATE INVOICE NUMBER
-            // ======================
-
-            $today = now()->format('Ymd');
-
-            $count =
-                Billing::whereDate(
-                    'created_at',
-                    today()
-                )->count() + 1;
-
-            $invoiceNumber =
-                'INV-'.
-                $today.
-                '-'.
-                str_pad(
-                    $count,
-                    4,
-                    '0',
-                    STR_PAD_LEFT
-                );
-
-            // ======================
-            // CREATE BILLING
-            // ======================
-
-            $billing = Billing::create([
-
-                'registration_id' => $registration->id,
-
-                'invoice_number' => $invoiceNumber,
-
-                'invoice_token' => Str::uuid(),
-
-                'payment_status_id' => 1,
-
-                'total_amount' => 0,
-
-            ]);
-
-            $registration->update(['billing_id' => $billing->id]);
-
-            // ======================
-            // CREATE BILLING ITEMS
-            // ======================
-
-            $total = 0;
-
-            foreach (
-                $registration->registrationPrograms as $item
-            ) {
-
-                $subtotal =
-                    $item->price;
-
-                BillingItem::create([
-
-                    'billing_id' => $billing->id,
-
-                    'registration_id' => $registration->id,
-
-                    'program_id' => $item->program_id,
-
-                    'description' => $item->program?->name ?? '-',
-
-                    'price' => $item->price,
-
-                    'quantity' => 1,
-
-                    'subtotal' => $subtotal,
-
-                ]);
-
-                $total += $subtotal;
-            }
-
-            // ======================
-            // UPDATE TOTAL
-            // ======================
-
-            $billing->update([
-
-                'total_amount' => $total,
-
-            ]);
-
-            return response()->json([
-
-                'message' => 'Billing generated successfully.',
-
-                'data' => $billing->fresh(),
-
-            ]);
-        });
+        return response()->json([
+            'message' => 'Billing generated successfully.',
+            'data' => $billing,
+        ]);
     }
 
     public function eligibleRegistrations(Request $request)
@@ -219,7 +113,7 @@ class BillingController extends Controller
         return response()->json($query->paginate($request->integer('per_page', 10)));
     }
 
-    public function generateCombined(Request $request)
+    public function previewCombined(Request $request, BillingGenerationService $billingGenerationService)
     {
         $this->forbidNonAdmin();
 
@@ -228,62 +122,38 @@ class BillingController extends Controller
             'registration_ids.*' => 'required|integer|distinct|exists:registrations,id',
         ]);
 
-        return DB::transaction(function () use ($validated) {
-            $registrations = Registration::with('registrationPrograms.program')
-                ->whereIn('id', $validated['registration_ids'])
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get();
+        return response()->json([
+            'data' => $billingGenerationService->previewCombined($validated['registration_ids']),
+        ]);
+    }
 
-            if ($registrations->count() !== count($validated['registration_ids'])) {
-                return response()->json(['message' => 'Some registrations could not be found.'], 422);
-            }
+    public function generateCombined(Request $request, BillingGenerationService $billingGenerationService)
+    {
+        $this->forbidNonAdmin();
 
-            if ($registrations->contains(fn ($registration) => $registration->billing_id || $registration->registrationPrograms->isEmpty())) {
-                return response()->json(['message' => 'All selected registrations must be unbilled and have programs.'], 422);
-            }
+        $validated = $request->validate([
+            'registration_ids' => 'required|array|min:2',
+            'registration_ids.*' => 'required|integer|distinct|exists:registrations,id',
+        ] + $this->discountValidationRules());
 
-            if ($registrations->pluck('clinic_id')->unique()->count() !== 1 || $registrations->pluck('payer_id')->unique()->count() !== 1) {
-                return response()->json(['message' => 'Selected registrations must have the same clinic and payer.'], 422);
-            }
+        $billing = $billingGenerationService->generateCombined(
+            $validated['registration_ids'],
+            $validated['discounts'] ?? []
+        );
 
-            $today = now()->format('Ymd');
-            $count = Billing::whereDate('created_at', today())->count() + 1;
-            $invoiceNumber = 'INV-'.$today.'-'.str_pad($count, 4, '0', STR_PAD_LEFT);
-            $billing = Billing::create([
-                'registration_id' => $registrations->first()->id,
-                'invoice_number' => $invoiceNumber,
-                'invoice_token' => Str::uuid(),
-                'payment_status_id' => 1,
-                'total_amount' => 0,
-            ]);
+        return response()->json([
+            'message' => 'Combined billing generated successfully.',
+            'data' => $billing,
+        ], 201);
+    }
 
-            $total = 0;
-            foreach ($registrations as $registration) {
-                $registration->update(['billing_id' => $billing->id]);
-
-                foreach ($registration->registrationPrograms as $programItem) {
-                    $subtotal = $programItem->price;
-                    BillingItem::create([
-                        'billing_id' => $billing->id,
-                        'registration_id' => $registration->id,
-                        'program_id' => $programItem->program_id,
-                        'description' => $programItem->program?->name ?? '-',
-                        'price' => $programItem->price,
-                        'quantity' => 1,
-                        'subtotal' => $subtotal,
-                    ]);
-                    $total += $subtotal;
-                }
-            }
-
-            $billing->update(['total_amount' => $total]);
-
-            return response()->json([
-                'message' => 'Combined billing generated successfully.',
-                'data' => $billing->load(['items.registration', 'registrations.child', 'registrations.payer', 'paymentStatus']),
-            ], 201);
-        });
+    private function discountValidationRules(): array
+    {
+        return [
+            'discounts' => ['sometimes', 'array'],
+            'discounts.*.registration_program_id' => ['required', 'integer', 'distinct'],
+            'discounts.*.discount_amount' => ['required', 'integer', 'min:0', 'max:9999999999999'],
+        ];
     }
 
     public function cancel($id)
@@ -295,10 +165,15 @@ class BillingController extends Controller
             $billing = Billing::with('items')
                 ->findOrFail($id);
 
-            if ($billing->payment_status_id != 1) {
+            $isPaidZeroAmountInvoice =
+                (int) $billing->payment_status_id === 3
+                && (float) $billing->total_amount === 0.0
+                && ! $billing->payment_receipt;
+
+            if ($billing->payment_status_id != 1 && ! $isPaidZeroAmountInvoice) {
 
                 return response()->json([
-                    'message' => 'Only unpaid billing can be cancelled.',
+                    'message' => 'Only unpaid billing or a zero-total auto-paid billing without a receipt can be cancelled.',
                 ], 422);
             }
 

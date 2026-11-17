@@ -355,6 +355,11 @@ Route::middleware([
     );
 
     Route::get(
+        '/registrations/{id}/billing-preview',
+        [BillingController::class, 'previewGeneration']
+    );
+
+    Route::get(
         '/billings/eligible-registrations',
         [BillingController::class, 'eligibleRegistrations']
     );
@@ -362,6 +367,11 @@ Route::middleware([
     Route::post(
         '/billings/generate-combined',
         [BillingController::class, 'generateCombined']
+    );
+
+    Route::post(
+        '/billings/combined-preview',
+        [BillingController::class, 'previewCombined']
     );
 
     Route::get(

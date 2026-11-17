@@ -34,6 +34,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea
+/aha-cdc-api.code-workspace
 
 # Testing
 .phpunit.result.cache

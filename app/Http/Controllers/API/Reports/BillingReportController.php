@@ -48,7 +48,8 @@ class BillingReportController extends Controller
             ->leftJoin('program_categories as pc', 'pc.id', '=', 'p.program_category_id')
             ->whereNotNull('bi.registration_id')
             ->select('bi.registration_id')
-            ->selectRaw('SUM(bi.subtotal) as registration_total')
+            ->selectRaw('SUM(bi.subtotal - COALESCE(bi.discount_amount, 0)) as registration_total')
+            ->selectRaw('SUM(COALESCE(bi.discount_amount, 0)) as registration_discount')
             ->selectRaw("GROUP_CONCAT(DISTINCT pc.name ORDER BY pc.name SEPARATOR ', ') as program_categories")
             ->groupBy('bi.registration_id');
 
@@ -71,6 +72,7 @@ class BillingReportController extends Controller
                 'b.created_at as invoice_date',
             ])
             ->selectRaw('COALESCE(rb.registration_total, 0) as total_billing')
+            ->selectRaw('COALESCE(rb.registration_discount, 0) as discount_amount')
             ->selectRaw("COALESCE(rb.program_categories, '') as program_categories");
 
         if (! empty($validated['registration_number'])) {
@@ -112,6 +114,7 @@ class BillingReportController extends Controller
                     'child_name' => $row->child_name,
                     'program_categories' => $row->program_categories,
                     'total_billing' => (float) $row->total_billing,
+                    'discount_amount' => (float) $row->discount_amount,
                     'payment_status_id' => (int) $row->payment_status_id,
                     'payment_status' => $row->payment_status,
                     'invoice_date' => $row->invoice_date,
